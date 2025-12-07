@@ -3,7 +3,7 @@
 
     Рекурсивный вызов является \textbf{хвостовым}, если он —
     \alert{последнее действие} в выполняемой процедуре, и после
-    возврата из рекурсивного вызова функции \alert{ничего больше делать не нужно}.
+    возврата из рекурсивного вызова процедуры \alert{ничего больше делать не нужно}.
 
 \end{frame}
 
@@ -11,12 +11,9 @@
 \begin{frame}{1.1 Обычная рекурсия}
     \centering
 
-    Начнём анализ рекурсии в Scheme с процедуры \mintinline{scheme}{f1}.
-
-    На её примере мы увидим, как \alert{REPL} вызывает
-    функцию, как формируются новые фреймы в стеке и как
-    происходит возврат результатов при
-    рекурсивных вызовах.
+    Начнем с анализа процедуры \mintinline{scheme}{f1} —
+    примера обычной рекурсии.
+    Мы разберем, как \alert{REPL} создает фреймы стека и возвращает результаты.
 
     \usebox{\codeFactorialSimple}
 \end{frame}
@@ -31,8 +28,9 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Среда \alert{REPL} вызывает процедуру \mintinline{scheme}{f1} с
-        аргументом \mintinline{scheme}{3}
+        Среда \alert{REPL} вызывает \mintinline{scheme}{f1}
+        с аргументом \mintinline{scheme}{3}.
+        Это старт рекурсии — создается первый фрейм стека с \mintinline{scheme}{n = 3}.
 
         \vfill
 
@@ -54,7 +52,6 @@
             \node[env-node=1, right=of f1-1] (stack1) { n $\mid$ 3 }
             edge [dashed, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -68,7 +65,8 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Интерпретатор вызывает особую форму \mintinline{scheme}{if}
+        После вызова интерпретатор переходит к специальной форме
+        \mintinline{scheme}{if}, проверяя условие для выхода из рекурсии.
 
         \vfill
 
@@ -93,12 +91,11 @@
             \node[box, below=of f1-1] (if-1) {\mintinline{scheme}{(if (= n 0))}}
             edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 3. Вычисление условия}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 3. Вычисление предиката}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -107,7 +104,7 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Интерпретатор перешел к вычислению предиката \mintinline{scheme}{(= n 0)}.
+        Внутри \mintinline{scheme}{if} вычисляется предикат \mintinline{scheme}{(= n 0)}
 
         \vfill
 
@@ -134,12 +131,11 @@
             edge [<-, thick, blue!70!black] (if-1)
             edge [dashed, thick, blue!70!black, bend right=30] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 4. Условие ложно}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 4. Предикат ложен}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -148,8 +144,8 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Вычисление предиката \mintinline{scheme}{(= n 0)}
-        завершилось и вернуло значение \mintinline{scheme}{#f}
+        Предикат \mintinline{scheme}{(= n 0)}
+        возвращает \mintinline{scheme}{#f}.
 
         \vfill
 
@@ -176,7 +172,6 @@
             edge [<-, thick, blue!70!black] (if-1)
             edge [->, thick, blue!70!black, bend left=30] (if-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -190,10 +185,8 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Форма \mintinline{scheme}{if} получила от
-        предиката значение \mintinline{scheme}{#f}.
-        Управление передаётся else-ветке c рекурсивным
-        вызовом \mintinline{scheme}{(f1 (- n 1))}.
+        После получения \mintinline{scheme}{#f} управление
+        передается в ветку else: \mintinline{scheme}{(* (f1 (- n 1)) n)}
 
         \vfill
 
@@ -222,7 +215,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 6. Тело обычной (нехвостовой) рекурсии}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 6. Вычисление тела рекурсии}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -231,9 +224,9 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        После выбора else-ветки интерпретатор начал
-        вычислять тело процедуры — выражение
-        \mintinline{scheme}{(* (f1 (- n 1)) n)}.
+        Интерпретатор начинает вычислять выражение
+        \mintinline{scheme}{(* (f1 (- n 1)) n)},
+        готовясь к рекурсивному вызову
 
         \vfill
 
@@ -258,12 +251,11 @@
             edge [<-, thick, blue!70!black] (f1-1)
             edge [dashed, thick, blue!70!black, bend right=10] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 7. Подготовка рекурсии}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 7. Подготовка рекурсивного вызова}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -303,7 +295,8 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 8. Вычисление фактического аргумента}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 8. Вычисление аргумента}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -312,8 +305,9 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        В новом рекурсивном вызове \mintinline{scheme}{f1} интерпретатор начал
-        вычислять фактический параметр — выражение \mintinline{scheme}{(- n 1)}.
+        Вычисляется аргумент для следующего вызова:
+        \mintinline{scheme}{(- n 1)} = 2.
+        Это подготавливает новый уровень рекурсии.
 
         \vfill
 
@@ -343,11 +337,11 @@
             edge [<-, thick, blue!70!black] (f1-2)
             edge [dashed, thick, blue!70!black, bend right=40] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 9. Аргумент вычислен}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 9. Вычисление аргумента}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -389,11 +383,11 @@
             edge [dashed, thick, blue!70!black, bend right=40] (stack1)
             edge [->, thick, blue!70!black, bend left=30] (f1-2);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 10. Второй уровень рекурсии активирован}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 10. Рекурсивный вызов}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -402,8 +396,8 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Значение аргумента \mintinline{scheme}{2} подставлено:
-        теперь выполняется вызов \mintinline{scheme}{(f1 2)}.
+        Второй вызов \mintinline{scheme}{(f1 2)} активирован.
+        Стек продолжает расти с новым фреймом.
 
         \vfill
 
@@ -430,9 +424,9 @@
             \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
             edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
+
 
 \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 11. Стек растёт}
     \begin{columns}[c]
@@ -443,7 +437,7 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Второй вызов \mintinline{scheme}{(f1 2)} — в стеке появился новый фрейм
+        В стеке появился новый фрейм
         окружения с локальной переменной \mintinline{scheme}{n}
         $\mapsto$ \mintinline{scheme}{2}
 
@@ -474,11 +468,11 @@
             \node[env-node=1, right=of f1-2] (stack2) { n $\mid$ 2 }
             edge [dashed, thick, blue!70!black] (f1-2);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 12. Рост стека в нехвостовой рекурсии}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 12. Максимальная глубина стека}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -487,9 +481,11 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Всего за три шага рекурсии (от \mintinline{scheme}{n = 3}
+        Всего за три шага рекурсии
+
+        (от \mintinline{scheme}{n = 3}
         до \mintinline{scheme}{n = 0})
-        стек вырос до восьми активных фреймов.
+        стек вырос до четырёх активных фреймов.
 
         \vfill
 
@@ -534,11 +530,11 @@
             \node[env-node=1, right=of f1-4] (stack3) { n $\mid$ 0 }
             edge [dashed, thick, blue!70!black] (f1-4);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 13. Начало сворачивания}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 13. Начало сворачивания стека}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -596,7 +592,6 @@
             \node[env-node=1, right=of f1-4] (stack3) { n $\mid$ 0 }
             edge [dashed, thick, blue!70!black] (f1-4);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -610,7 +605,9 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Самый глубокий фрейм вернул \mintinline{scheme}{1}.
+        Значение \mintinline{scheme}{1} подставлено в умножение на уровне
+        \mintinline{scheme}{n = 1}: \mintinline{scheme}{(* 1 1) = 1}.
+        Фрейм начинает сворачиваться.
 
         \vfill
 
@@ -649,14 +646,12 @@
             \node[box, below=of f1-3] (mul-3) {\mintinline{scheme}{(* 1 1)}}
             edge [<-, thick, blue!70!black] (f1-3)
             edge [dashed, thick, blue!70!black, bend right=10] (stack3);
-
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 15. Умножение на самом глубоком уровне завершено}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 15. Передача результата вверх}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -665,10 +660,8 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Выражение \mintinline{scheme}{(* 1 1)} вычислено и вернуло \mintinline{scheme}{1}.
-        Кадр самого нижнего умножения полностью отработал и
-        передал результат \mintinline{scheme}{1} вверх —
-        в кадр процедуры \mintinline{scheme}{(f1 1)}.
+        Умножение завершено и возвращает 1 в вызов \mintinline{scheme}{(f1 1)}.
+        Один фрейм удален.
 
         \vfill
 
@@ -708,14 +701,12 @@
             edge [<-, thick, blue!70!black] (f1-3)
             edge [->, thick, blue!70!black, bend left=30] (f1-3)
             edge [dashed, thick, blue!70!black, bend right=10] (stack3);
-
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 16. Второй уровень рекурсии завершён}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 16. Завершение первого уровня}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -724,8 +715,8 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Вызов \mintinline{scheme}{(f1 1)} завершился и
-        вернул значение \mintinline{scheme}{1}.
+        Вызов \mintinline{scheme}{(f1 1)} возвращает 1.
+        Результат передается на уровень выше для дальнейшего умножения.
 
         \vfill
 
@@ -756,17 +747,15 @@
             \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
             edge [<-, thick, blue!70!black] (f1-2)
             edge [dashed, thick, blue!70!black, bend right=10] (stack2);
-
             \node[box, below=of mul-2] (f1-3) {\mintinline{scheme}{1}}
             edge [<-, thick, blue!70!black] (mul-2)
             edge [->, thick, blue!70!black, bend left=30] (mul-2);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 17. Предпоследний шаг сворачивания}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 17. Умножение на втором уровне}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -775,9 +764,8 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Значение \mintinline{scheme}{1} от
-        \mintinline{scheme}{(f1 1)} уже
-        превратилось во втором уровне в \mintinline{scheme}{2}.
+        Значение 1 превращается в 2 через \mintinline{scheme}{(* 1 2)}.
+        Стек продолжает сворачиваться.
 
         \vfill
 
@@ -814,7 +802,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 18. Последнее умножение перед завершением}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 18. Завершение второго уровня}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -823,10 +811,7 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Умножение второго уровня завершено
-        и вернуло \mintinline{scheme}{2}.
-        Этот результат подставлен в самое первое умножение:
-        \mintinline{scheme}{(* 2 n)} $\to$ \mintinline{scheme}{(* 2 3)}.
+        Результат умножения передаётся в вызов \mintinline{scheme}{(f1 2)}.
 
         \vfill
 
@@ -864,7 +849,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 19. Самое последнее действие нехвостовой рекурсии}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 19. Передача результата вверх}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -873,7 +858,7 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Выполняется финальное умножение \mintinline{scheme}{(* 2 3)}.
+        Значение \mintinline{scheme}{2} передаётся в умножение на уровне
 
         \vfill
 
@@ -905,7 +890,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 20. Финальный кадр обычной рекурсии}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 20. Умножение на 4 уровне}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -914,7 +899,7 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Выполняется последнее умножение \mintinline{scheme}{  (* 2 3) }.
+        Значение \mintinline{scheme}{2} передаётся в \mintinline{scheme}{(* 2 3)}.
 
         \vfill
 
@@ -944,7 +929,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 21. Рекурсия завершена — результат готов}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 21. Передача результата вверх}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -953,10 +938,10 @@
         \usebox{\codeFactorialSimple}
         \vspace{0.4cm}
 
-        Умножение \mintinline{scheme}{  (* 2 3) }
-        вернуло \mintinline{scheme}{  6}.
+        Умножение \mintinline{scheme}{(* 2 3)}
+        вернуло \mintinline{scheme}{6}.
         Это и есть окончательное значение всего выражения
-        \mintinline{scheme}{  (f1 3)}.
+        \mintinline{scheme}{(f1 3)}.
 
         \vfill
 
@@ -987,7 +972,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 22. Обычная рекурсия завершена}
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 22. Завершение рекурсии}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
