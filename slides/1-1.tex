@@ -14,7 +14,7 @@
 происходит возврат результатов при
 рекурсивных вызовах.
 
-\usebox{\codebox}
+\usebox{\codeFactorialSimple}
 \end{frame}
 
 \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 1. Начальный вызов}
@@ -23,7 +23,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Среда \alert{REPL} вызывает процедуру \mintinline{scheme}{f1} с аргументом \mintinline{scheme}{3}
@@ -59,7 +59,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Интерпретатор вызывает особую форму \mintinline{scheme}{if}
@@ -98,7 +98,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
 Интерпретатор спустился внутрь формы \mintinline{scheme}{if} и теперь вычисляет предикат \mintinline{scheme}{(= n 0)}.
@@ -139,7 +139,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
 Вычисление предиката \mintinline{scheme}{(= n 0)} завершилось и вернуло значение \mintinline{scheme}{#f} (ложь)
@@ -180,7 +180,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
 Форма \mintinline{scheme}{if} получила от предиката значение \mintinline{scheme}{#f}.
@@ -219,7 +219,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
 После выбора ветки «иначе» интерпретатор начал вычислять тело процедуры — выражение \mintinline{scheme}{(* (f1 (- n 1)) n)}.
@@ -258,7 +258,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Интерпретатор начал вычислять первый операнд умножения — выражение \mintinline{scheme}{(f1 (- n 1))}.
@@ -297,7 +297,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
 В новом вызове \mintinline{scheme}{f1} интерпретатор начал вычислять фактический параметр — выражение \mintinline{scheme}{(- n 1)}.
@@ -339,7 +339,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
 Выражение \mintinline{scheme}{(- n 1)} вернуло значение \mintinline{scheme}{  2}.
@@ -384,7 +384,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Значение аргумента \mintinline{scheme}{  2} подставлено, второй кадр процедуры \mintinline{scheme}{ f1 } стал полноценным: теперь выполняется вызов \mintinline{scheme}{  (f1 2) }.
@@ -424,7 +424,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
 Второй вызов \mintinline{scheme}{(f1 2)} полностью активирован — в стеке появился новый фрейм окружения с локальной переменной \mintinline{scheme}{n} $\mapsto$ \mintinline{scheme}{2}
@@ -466,7 +466,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Всего за три шага рекурсии (от \mintinline{scheme}{ n = 3 }  до \mintinline{scheme}{ n = 0 }) стек вырос до восьми активных кадров
@@ -524,7 +524,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Самый глубокий вызов \mintinline{scheme}{  (f1 0) } попал в ветку \mintinline{scheme}{  (if (= n 0) 1 …) }  и вернул значение \mintinline{scheme}{ 1  }.
@@ -585,7 +585,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Самый глубокий кадр вернул \mintinline{scheme}{ 1 }.
@@ -640,7 +640,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Выражение \mintinline{scheme}{(* 1 1)} вычислено и вернуло \mintinline{scheme}{1}.
@@ -697,7 +697,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Вызов \mintinline{scheme}{  (f1 1) } полностью отработал и вернул значение \mintinline{scheme}{  1 }.
@@ -747,7 +747,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Значение \mintinline{scheme}{ 1 } от \mintinline{scheme}{(f1 1)} уже превратилось во втором уровне в \mintinline{scheme}{2}.
@@ -793,7 +793,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Умножение второго уровня завершено и вернуло \mintinline{scheme}{2}  .
@@ -841,7 +841,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Выполняется финальное умножение \mintinline{scheme}{  (* 2 3) }.
@@ -882,7 +882,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Выполняется последнее умножение \mintinline{scheme}{  (* 2 3) }.
@@ -921,7 +921,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Умножение \mintinline{scheme}{  (* 2 3) } вернуло \mintinline{scheme}{  6}.
@@ -962,7 +962,7 @@
   % ======== левая колонка: код ========
   \column{0.4\textwidth}
   \centering
-  \usebox{\codebox}
+  \usebox{\codeFactorialSimple}
   \vspace{0.4cm}
 
   Значение \mintinline{scheme}{  6 } возвращено в \alert{REPL}.
