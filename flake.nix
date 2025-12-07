@@ -1,5 +1,5 @@
 {
-  description = "Reproducible build of my project";
+  description = "Beamer LaTeX presentation with XeLaTeX and custom fonts";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/b134951a4c9f3c995fd7be05f3243f8ecd65d798";
@@ -29,10 +29,13 @@
     {
       packages.x86_64-linux.default =
         pkgs.stdenv.mkDerivation {
-          pname = "my-project";
-          version = "1.0";
+          pname = "presentation";
+          version = "2.0";
 
-          src = ./.;
+          src = pkgs.lib.sourceByRegex ./. [
+            ".*\.tex"
+            "slides/*"
+          ];
 
           buildInputs = [
             pkgs.bash
@@ -48,7 +51,7 @@
 
           buildPhase = ''
             export FONTCONFIG_FILE=${fontsConf}
-            export HOME=$(mktemp -d)  # Временный writable HOME для кэша
+            export HOME=$(mktemp -d)
             mkdir -p $HOME/.cache/fontconfig
 
             fc-cache -fv
