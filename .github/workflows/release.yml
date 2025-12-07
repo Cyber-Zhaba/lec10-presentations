@@ -1,0 +1,31 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Build project
+        run: nix build .#default
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: result/presentation.pdf
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          name: "Release ${{ github.ref_name }}"

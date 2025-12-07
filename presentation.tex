@@ -1,0 +1,3201 @@
+\documentclass[aspectratio=169]{beamer}
+
+% ==============================
+% ==  Основные пакеты и тема  ==
+% ==============================
+\usetheme{metropolis}
+\usepackage{fontspec}
+\usepackage{amssymb}
+\setsansfont{Fira Sans}
+\setmonofont{Fira Code}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.multipart}
+
+% Цветовая палитра для TikZ
+\tikzset{
+  evaltree/.style={rectangle split, rectangle split parts=#1, draw=green!60!black, fill=green!5, rounded corners, thick, align=center},
+}
+
+% Для кода
+\usepackage{minted}
+\usepackage[svgnames]{xcolor}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\newminted{scheme}{
+  fontsize=\scriptsize, 
+  linenos,
+  numbersep=8pt,
+  gobble=4,
+  frame=lines,
+  bgcolor=bg,
+  framesep=3mm,
+  escapeinside=||
+} 
+ 
+
+% ==============================
+% ==        Метаданные        ==
+% ==============================
+\title{10. Хвостовая рекурсия в языке Scheme}
+\institute{Курс: Основы информатики}
+\date{}
+
+% ==============================
+% ==      Блоки с кодом       ==
+% ==============================
+\newsavebox{\codebox}
+\begin{lrbox}{\codebox}
+\begin{minipage}{0.4\textwidth}
+  \begin{schemecode}
+    (define (f1 n)
+      (if (= n 0)
+          1
+          (* (f1 (- n 1)) n)))
+  \end{schemecode}
+\end{minipage}
+\end{lrbox}
+
+
+\newsavebox{\codeboxRec}
+\begin{lrbox}{\codeboxRec}
+\begin{minipage}{0.4\textwidth}
+  \begin{schemecode}
+    (define (f2 n acc)
+      (if (= n 0)
+        acc
+        (f2 (- n 1) (* n acc))))
+  \end{schemecode}
+\end{minipage}
+\end{lrbox}
+
+
+\newsavebox{\codeboxCounter}
+\begin{lrbox}{\codeboxCounter}
+\begin{minipage}{0.4\textwidth}
+  \begin{schemecode}
+    (define counter
+      ((lambda (n)
+        (lambda ()
+          (set! n (+ n 1))
+          n))
+        0))
+  \end{schemecode}
+\end{minipage}
+\end{lrbox}
+
+\newsavebox{\codeboxL}
+\begin{lrbox}{\codeboxL}
+\begin{minipage}{0.4\textwidth}
+  \begin{schemecode}
+    (define (f x)
+      (+ (g (lambda (y)
+            (* x y))) 3))
+
+    (define (g h)
+	    (h (h 7)))
+  \end{schemecode}
+\end{minipage}
+\end{lrbox}
+
+% ==============================
+% ==         Документ         ==
+% ==============================
+\begin{document}
+
+% ============================
+% 0. Титульный слайд
+% ============================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ============================
+% ==        Глава 1.        ==
+% ==                        ==
+% == Оптимизация хвостовой  ==
+% ==        рекурсии        ==
+% ============================
+\begin{frame}[fragile]{Глава 1. Оптимизация хвостовой рекурсии}
+\centering
+
+Рекурсивный вызов является \textbf{хвостовым}, если он — \alert{последнее действие} в выполняемой функции, и после возврата из рекурсивного вызова функции \alert{ничего больше делать не нужно}.
+
+\end{frame}
+
+
+\begin{frame}{1.1 Обычная рекурсия}
+\centering
+Начнём анализ рекурсии в Scheme с процедуры \mintinline{scheme}{f1}.
+На её примере мы увидим, как \alert{REPL} вызывает
+функцию,как формируются новые фреймы в стеке и как
+происходит возврат результатов при
+рекурсивных вызовах.
+
+\usebox{\codebox}
+\end{frame}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 1. Начальный вызов}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Среда \alert{REPL} вызывает процедуру \mintinline{scheme}{f1} с аргументом \mintinline{scheme}{3}
+  
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=1.1cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 n)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 2. Вызов \mintinline{scheme}{if}}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Интерпретатор вызывает особую форму \mintinline{scheme}{if}
+    
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+
+    \node[box, below=of f1-1] (if-1) {\mintinline{scheme}{(if (= n 0))}}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 3. Вычисление условия}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+Интерпретатор спустился внутрь формы \mintinline{scheme}{if} и теперь вычисляет предикат \mintinline{scheme}{(= n 0)}.
+
+\vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (if-1) {\mintinline{scheme}{(if (= n 0))}}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of if-1] (eq-1) {\mintinline{scheme}{(= n 0)}}
+      edge [<-, thick, blue!70!black] (if-1)
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 4. Условие ложно}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+Вычисление предиката \mintinline{scheme}{(= n 0)} завершилось и вернуло значение \mintinline{scheme}{#f} (ложь)
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (if-1) {\mintinline{scheme}{(if (= n 0))}}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of if-1] (eq-1) {\mintinline{scheme}{#f}}
+      edge [<-, thick, blue!70!black] (if-1)
+      edge [->, thick, blue!70!black, bend left=30] (if-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 5. Выбор ветки «иначе»}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+Форма \mintinline{scheme}{if} получила от предиката значение \mintinline{scheme}{#f}.
+Управление передаётся ветке c рекурсивным вызовом \mintinline{scheme}{(f1 (- n 1))}.
+ 
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (if-1) {\mintinline{scheme}{(if #f)}}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 6. Тело обычной (нехвостовой) рекурсии}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+После выбора ветки «иначе» интерпретатор начал вычислять тело процедуры — выражение \mintinline{scheme}{(* (f1 (- n 1)) n)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 7. Подготовка к рекурсивному вызову}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Интерпретатор начал вычислять первый операнд умножения — выражение \mintinline{scheme}{(f1 (- n 1))}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 (- n 1))}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \end{tikzpicture}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 8. Вычисление фактического аргумента}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering  
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+В новом вызове \mintinline{scheme}{f1} интерпретатор начал вычислять фактический параметр — выражение \mintinline{scheme}{(- n 1)}.
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 (- n 1))}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=of f1-2] (sub-2) {\mintinline{scheme}{(- n 1)}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=40] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 9. Аргумент вычислен — появляется второй кадр}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+Выражение \mintinline{scheme}{(- n 1)} вернуло значение \mintinline{scheme}{  2}.
+Интерпретатор связал его с параметром \mintinline{scheme}{ n } во втором вызове процедуры \mintinline{scheme}{ f1}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 (- n 1))}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=of f1-2] (sub-2) {\mintinline{scheme}{2}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=40] (stack1)
+      edge [->, thick, blue!70!black, bend left=30] (f1-2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 10. Второй уровень рекурсии активирован}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Значение аргумента \mintinline{scheme}{  2} подставлено, второй кадр процедуры \mintinline{scheme}{ f1 } стал полноценным: теперь выполняется вызов \mintinline{scheme}{  (f1 2) }.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 11. Стек растёт}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+Второй вызов \mintinline{scheme}{(f1 2)} полностью активирован — в стеке появился новый фрейм окружения с локальной переменной \mintinline{scheme}{n} $\mapsto$ \mintinline{scheme}{2}
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 12. Провал нехвостовой рекурсии}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Всего за три шага рекурсии (от \mintinline{scheme}{ n = 3 }  до \mintinline{scheme}{ n = 0 }) стек вырос до восьми активных кадров
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.28cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack2);
+
+    \node[box, below=of mul-2] (f1-3) {\mintinline{scheme}{(f1 1)}}
+      edge [<-, thick, blue!70!black] (mul-2);
+    \node[evaltree=1, right=of f1-3] (stack3) { n $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-3);
+    \node[box, below=of f1-3] (mul-3) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-3)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack3);
+
+    \node[box, below=of mul-3] (f1-4) {\mintinline{scheme}{(f1 0)}}
+      edge [<-, thick, blue!70!black] (mul-3);
+    \node[evaltree=1, right=of f1-4] (stack3) { n $\mid$ 0 }
+      edge [dashed, thick, blue!70!black] (f1-4);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 13. Начало сворачивания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Самый глубокий вызов \mintinline{scheme}{  (f1 0) } попал в ветку \mintinline{scheme}{  (if (= n 0) 1 …) }  и вернул значение \mintinline{scheme}{ 1  }.
+Это первый результат, который пошёл вверх по цепочке.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.28cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack2);
+
+    \node[box, below=of mul-2] (f1-3) {\mintinline{scheme}{(f1 1)}}
+      edge [<-, thick, blue!70!black] (mul-2);
+    \node[evaltree=1, right=of f1-3] (stack3) { n $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-3);
+    \node[box, below=of f1-3] (mul-3) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-3)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack3);
+
+    \node[box, below=of mul-3] (f1-4) {\mintinline{scheme}{1}}
+      edge [<-, thick, blue!70!black] (mul-3)
+      edge [->, thick, blue!70!black, bend left=40] (mul-3);
+    \node[evaltree=1, right=of f1-4] (stack3) { n $\mid$ 0 }
+      edge [dashed, thick, blue!70!black] (f1-4);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 14. Сворачивание стека: первое умножение выполнено}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Самый глубокий кадр вернул \mintinline{scheme}{ 1 }.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.32cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack2);
+
+    \node[box, below=of mul-2] (f1-3) {\mintinline{scheme}{(f1 1)}}
+      edge [<-, thick, blue!70!black] (mul-2);
+    \node[evaltree=1, right=of f1-3] (stack3) { n $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-3);
+    \node[box, below=of f1-3] (mul-3) {\mintinline{scheme}{(* 1 1)}}
+      edge [<-, thick, blue!70!black] (f1-3)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack3);
+
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 15. Умножение на самом глубоком уровне завершено}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Выражение \mintinline{scheme}{(* 1 1)} вычислено и вернуло \mintinline{scheme}{1}.
+Кадр самого нижнего умножения полностью отработал и передал результат \mintinline{scheme}{1} вверх — в кадр процедуры \mintinline{scheme}{(f1 1)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.32cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack2);
+
+    \node[box, below=of mul-2] (f1-3) {\mintinline{scheme}{(f1 1)}}
+      edge [<-, thick, blue!70!black] (mul-2);
+    \node[evaltree=1, right=of f1-3] (stack3) { n $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-3);
+    \node[box, below=of f1-3] (mul-3) {\mintinline{scheme}{1}}
+      edge [<-, thick, blue!70!black] (f1-3)
+      edge [->, thick, blue!70!black, bend left=30] (f1-3)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack3);
+
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 16. Второй уровень рекурсии завершён}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Вызов \mintinline{scheme}{  (f1 1) } полностью отработал и вернул значение \mintinline{scheme}{  1 }.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.34cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack2);
+
+    \node[box, below=of mul-2] (f1-3) {\mintinline{scheme}{1}}
+      edge [<-, thick, blue!70!black] (mul-2)
+      edge [->, thick, blue!70!black, bend left=30] (mul-2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 17. Предпоследний шаг сворачивания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Значение \mintinline{scheme}{ 1 } от \mintinline{scheme}{(f1 1)} уже превратилось во втором уровне в \mintinline{scheme}{2}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.34cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{(* 1 2)}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 18. Последнее умножение перед завершением}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Умножение второго уровня завершено и вернуло \mintinline{scheme}{2}  .
+Этот результат подставлен в самое первое, «самое долго ждавшее» умножение: \mintinline{scheme}{  (* 2 n) } $\to$ \mintinline{scheme}{  (* 2 3) }.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.36cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{(f1 2)}}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[evaltree=1, right=of f1-2] (stack2) { n $\mid$ 2 }
+      edge [dashed, thick, blue!70!black] (f1-2);
+    \node[box, below=of f1-2] (mul-2) {\mintinline{scheme}{2}}
+      edge [<-, thick, blue!70!black] (f1-2)
+      edge [->, thick, blue!70!black, bend left=30] (f1-2)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 19. Самое последнее действие нехвостовой рекурсии}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Выполняется финальное умножение \mintinline{scheme}{  (* 2 3) }.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.36cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* (f1 (- n 1)) n)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \node[box, below=of mul-1] (f1-2) {\mintinline{scheme}{2}}
+      edge [<-, thick, blue!70!black] (mul-1)
+      edge [->, thick, blue!70!black, bend left=30] (mul-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 20. Финальный кадр обычной рекурсии}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Выполняется последнее умножение \mintinline{scheme}{  (* 2 3) }.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.38cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{(* 2 3)}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 21. Рекурсия завершена — результат готов}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Умножение \mintinline{scheme}{  (* 2 3) } вернуло \mintinline{scheme}{  6}.
+Это и есть окончательное значение всего выражения \mintinline{scheme}{  (f1 3)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.38cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f1 3)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack1) { n $\mid$ 3 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{6}}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [->, thick, blue!70!black, bend left=30] (f1-1)
+      edge [dashed, thick, blue!70!black, bend right=10] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+    \begin{frame}[fragile]{1.1 Обычная рекурсия: Шаг 22. Обычная рекурсия завершена}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codebox}
+  \vspace{0.4cm}
+
+  Значение \mintinline{scheme}{  6 } возвращено в \alert{REPL}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.38cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.5cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{6}}
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}{1.2 Хвостовая рекурсия}
+\centering
+Продолжим анализ процедуры \mintinline{scheme}{f2}. Посмотрим как Scheme превращает красивую рекурсию в настоящую итерацию под капотом
+
+\usebox{\codeboxRec}
+\end{frame}
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 1. Начальный вызов хвостовой рекурсии}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Среда \alert{REPL} вызывает процедуру \mintinline{scheme}{f2} с аргументами \mintinline{scheme}{n = 3} и аккумулятором \mintinline{scheme}{acc = 1}
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f2-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 2. Проверка условия завершения}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Внутри процедуры \mintinline{scheme}{f2} интерпретатор начинает вычислять форму \mintinline{scheme}{(if (= n 0))}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 3. Вычисление предиката условия}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Интерпретатор переходит к вычислению предиката ветки \mintinline{scheme}{if} — выражения \mintinline{scheme}{(= n 0)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (eq1) {\mintinline{scheme}{ (= n 0) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 4. Условие ложно $\to$  выбирается ветка «иначе»}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+Вычисление предиката \mintinline{scheme}{(= n 0)} завершилось значением \mintinline{scheme}{#f}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (eq1) {\mintinline{scheme}{ #f }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1)
+      edge [->, thick, blue!70!black, bend left=30] (mul-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 5. Подготовка к хвостовому рекурсивному вызову}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Форма \mintinline{scheme}{if} уже получила значение предиката \mintinline{scheme}{#f} и «свернулась» до альтернативной ветки.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if #f) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 6. Хвостовой рекурсивный вызов готов к выполнению}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Форма if полностью свелась к телу рекурсивного вызова — выражению \mintinline{scheme}{(f2 (- n 1) (* n acc))}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 7. Вычисление аргументов перед хвостовым вызовом}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Интерпретатор начал вычислять аргументы рекурсивного вызова \mintinline{scheme}{(f2 (- n 1) (* n acc))}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=1.2cm of mul-1, xshift=-2cm] (sub-1) {\mintinline{scheme}{ (- n 1) }}
+      edge [dashed, thick, blue!70!black, bend right=22] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=1.2cm of mul-1, right=of sub-1] (mul-2) {\mintinline{scheme}{ (* n acc) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 8. Аргументы хвостового вызова полностью вычислены}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Оба аргумента рекурсивного вызова уже сведены к своим значениям
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=1.2cm of mul-1, xshift=-2cm] (sub-1) {\mintinline{scheme}{ (2) }}
+      edge [dashed, thick, blue!70!black, bend right=22] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=1.2cm of mul-1, right=of sub-1] (mul-2) {\mintinline{scheme}{ (3) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 9. Момент хвостовой оптимизации (TCO)}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Интерпретатор полностью подготовил хвостовой рекурсивный вызов \mintinline{scheme}{(f2 2 3)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 10. Хвостовая оптимизация выполнена — кадр перезаписан}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Сейчас произойдёт ключевое событие: вместо того чтобы положить на стек новый кадр процедуры \mintinline{scheme}{f2}, оптимизатор хвостовой рекурсии просто перезапишет текущий кадр значениями \mintinline{scheme}{n = 2} и \mintinline{scheme}{acc = 3} и передаст управление в начало тела процедуры \mintinline{scheme}{f2}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 11. Переход к следующей итерации — стек остаётся плоским}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Хвостовая оптимизация успешно выполнена: текущий кадр стека перезаписан новыми значениями \mintinline{scheme}{n = 2} и \mintinline{scheme}{acc = 3} (\mintinline{scheme}{acc} уже умножен: \mintinline{scheme}{1} $\times$ \mintinline{scheme}{3 = 3}).
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 2 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 12. Ещё одна хвостовая оптимизация}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  После очередной итерации внутри того же единственного кадра стека значения снова обновились
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+       \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 2 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+    \end{tikzpicture}
+
+
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 13. Последний рекурсивный шаг}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+Очередная хвостовая оптимизация выполнена
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 1 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 14. Финальная хвостовая оптимизация}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Ещё одна (уже четвёртая) хвостовая оптимизация выполнена
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 1 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+      edge [<-, thick, blue!70!black] (mul-2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 15. Условие завершено — рекурсия заканчивается}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  После последней хвостовой оптимизации в единственном кадре стека теперь \mintinline{scheme}{n = 0}, \mintinline{scheme}{acc = 6}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+      edge [<-, thick, blue!70!black] (mul-2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 16. Завершение вычисления — возврат результата}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  В единственном кадре стека теперь \mintinline{scheme}{n = 0}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
+      edge [<-, thick, blue!70!black] (mul-2)
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 17. Рекурсия завершена — возврат аккумулятора}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+Условие \mintinline{scheme}{(= n 0)} истинно, поэтому тело процедуры свелось к простому возврату значения переменной \mintinline{scheme}{acc}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (acc) }}
+      edge [<-, thick, blue!70!black] (mul-2)
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 18. Результат возвращён — рекурсия полностью завершена}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Переменная acc в последнем кадре содержит значение \mintinline{scheme}{6}
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+      edge [<-, thick, blue!70!black] (mul-1);
+    \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ 6 }}
+      edge [<-, thick, blue!70!black] (mul-2)
+      edge [->, thick, blue!70!black, bend left=30] (mul-2)
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 19. Возврат значения вверх по цепочке (хвостовой позиции)}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+  Значение 6, полученное в последнем кадре, возвращается сразу в предыдущий «виртуальный» уровень.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+      edge [<-, thick, blue!70!black] (f1-1);
+    \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ 6 }}
+      edge [<-, thick, blue!70!black] (mul-1)
+      edge [->, thick, blue!70!black, bend left=30] (mul-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 20. Финальный результат в REPL — рекурсия завершена без роста стека}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+Значение 6 поднялось по всем «виртуальным» уровням.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
+    \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ 6 }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [->, thick, blue!70!black, bend left=30] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 21. Всё завершено — результат в REPL}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxRec}
+  \vspace{0.4cm}
+
+Значение 6 окончательно возвращено в \alert{REPL}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ 6 }}
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}{2 Замыкание лямбды}
+\centering
+На примере процедур \mintinline{scheme}{f} и \mintinline{scheme}{g} рассмотрим замыкание лямбда-процедур
+
+\usebox{\codeboxL}
+\end{frame}
+
+
+  \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 1. Начальный вызов процедуры f}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+Среда \alert{REPL} вызывает пользовательскую процедуру \mintinline{scheme}{f} с аргументом \mintinline{scheme}{4}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 2. Начало вычисления тела процедуры f}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Интерпретатор приступил к вычислению тела процедуры \mintinline{scheme}{f}: формы \mintinline{scheme}{(+ (g ...) 3)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+    \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 3. Вычисление фактического аргумента для вызова g}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Интерпретатор завершил создание замыкания \mintinline{scheme}{(lambda (y) (* x y))} в окружающей среде, где \mintinline{scheme}{x} = 4.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.8cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=of p1] (g1) {\mintinline{scheme}{  (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black] (p1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 4. Вызов процедуры g — рост стека}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+ Интерпретатор выполнил применение процедуры \mintinline{scheme}{g} к замыканию \mintinline{scheme}{(lambda (y) (* x y))}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.7cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.3cm of p1, xshift=-0.5cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=25] (p1);
+    \node[evaltree=1, right=of g1, above=0.7cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+  \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 5. Начало вычисления тела процедуры g}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+Интерпретатор приступил к вычислению тела процедуры \mintinline{scheme}{g}  
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.6cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=35] (p1);
+    \node[evaltree=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+    \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+      edge [<-, thick, blue!70!black] (g1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+    \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 6. Первый (внешний) вызов замыкания h — рост стека продолжается}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Интерпретатор вычислил аргумент внутреннего вызова — число \mintinline{scheme}{7} — и теперь готов применить процедуру \mintinline{scheme}{h} к этому аргументу.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.4cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.55cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=35] (p1);
+    \node[evaltree=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+    \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+      edge [<-, thick, blue!70!black] (g1);
+    \node[box, below=of h1] (h2) {\mintinline{scheme}{ (h 7) }}
+      edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+      edge [<-, thick, blue!70!black] (h1);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+      \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 7. Первое применение замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+Интерпретатор выполнил первый вызов замыкания \mintinline{scheme}{h} к аргументом \mintinline{scheme}{7}.
+  
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.4cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.55cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=35] (p1);
+    \node[evaltree=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+    \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+      edge [<-, thick, blue!70!black] (g1);
+    \node[box, below=of h1] (h2) {\mintinline{scheme}{ ((lambda (y) (* x y)) 7) }}
+      edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+      edge [dashed, thick, red!70!black, bend right=40] (stack1)
+      edge [<-, thick, blue!70!black] (h1);
+    \node[evaltree=1, below=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
+      edge [dashed, thick, blue!70!black] (h2);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+        \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 8. Завершение первого применения замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Тело лямбда-выражения \mintinline{scheme}{(* x y)} полностью вычислено
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.4cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.55cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=35] (p1);
+    \node[evaltree=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+    \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+      edge [<-, thick, blue!70!black] (g1);
+    \node[box, below=of h1] (h2) {\mintinline{scheme}{ 28 }}
+      edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+      edge [dashed, thick, red!70!black, bend right=40] (stack1)
+      edge [->, thick, blue!70!black, bend left=30] (h1)
+      edge [<-, thick, blue!70!black] (h1);
+    \node[evaltree=1, below=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
+      edge [dashed, thick, blue!70!black] (h2);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+          \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 9. Возврат из первого замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Первый вызов замыкания \mintinline{scheme}{(lambda (y) (* x y))} завершён и полностью вытеснен из стека (фрейм с \mintinline{scheme}{y | 7} удалён).
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.6cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=35] (p1);
+    \node[evaltree=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+    \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h 28) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+      edge [<-, thick, blue!70!black] (g1);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+            \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 10. Второй вызов того же замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Интерпретатор выполнил второй вызов замыкания \mintinline{scheme}{h} уже с аргументом \mintinline{scheme}{28}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.6cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=35] (p1);
+    \node[evaltree=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+    \node[box, below=of g1] (h1) {\mintinline{scheme}{ ((lambda (y) (* x y)) 28) }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+      edge [dashed, thick, red!70!black, bend right=40] (stack1)
+      edge [<-, thick, blue!70!black] (g1);
+    \node[evaltree=1, below=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
+      edge [dashed, thick, blue!70!black] (h1);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+              \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 11. Завершение второго применения замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Тело лямбда-выражения \mintinline{scheme}{(* x y)} вычислено во второй раз:
+при \mintinline{scheme}{x} = 4 и \mintinline{scheme}{y} = 28 получено значение \mintinline{scheme}{112}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.6cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+      edge [<-, thick, blue!70!black, bend left=35] (p1);
+    \node[evaltree=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+    \node[box, below=of g1] (h1) {\mintinline{scheme}{ 112 }}
+      edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+      edge [dashed, thick, red!70!black, bend right=40] (stack1)
+      edge [->, thick, blue!70!black, bend left=30] (g1)
+      edge [<-, thick, blue!70!black] (g1);
+    \node[evaltree=1, below=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
+      edge [dashed, thick, blue!70!black] (h1);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 12. Завершение вызова g — возврат значения 112 в тело процедуры f}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Процедура \mintinline{scheme}{g} полностью отработала и вернула значение \mintinline{scheme}{112}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.7cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \node[box, below=1.3cm of p1, xshift=-1cm] (g1) {112}
+      edge [->, thick, blue!70!black, bend left=30] (p1)
+      edge [<-, thick, blue!70!black] (p1);
+    \node[evaltree=1, right=of g1, above=0.7cm, xshift=1.8cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+      edge [dashed, thick, blue!70!black, bend left=20] (g1)
+      edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 13. инальное вычисление в теле процедуры}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Вызов \mintinline{scheme}{g} полностью завершён, его результат \mintinline{scheme}{112} подставлен в тело процедуры \mintinline{scheme}{f}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.7cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ 112 3) }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 14. Окончередной результат — возврат в REPL}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+Примитивная операция \mintinline{scheme}{(+ 112 3)} вычислена, получено окончательное значение \mintinline{scheme}{115}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.7cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ 115 }}
+      edge [<-, thick, blue!70!black] (f1-1)
+      edge [->, thick, blue!70!black, bend left=30] (f1-1)
+      edge [dashed, thick, blue!70!black] (stack1);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+  \begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 15. Конец вычисления}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxL}
+  \vspace{0.4cm}
+
+  Процедура \mintinline{scheme}{f} полностью отработала и вернула значение \mintinline{scheme}{115} прямо в \alert{REPL}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.7cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=3.8cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ 115 }}
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+
+\end{columns}
+\end{frame}
+
+    \begin{frame}{2.2 Замыкание лямбды}
+\centering
+Разберём по шагам, как обычная лямбда-функция «захватывает» переменные из места своего рождения, сохраняет их в куче и продолжает к ним обращаться даже после завершения всех вызовов \mintinline{scheme}{f}.
+
+\usebox{\codeboxCounter}
+\end{frame}
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 1. Определение счётчика через замыкание}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  В \alert{REPL} вводится определение переменной \mintinline{scheme}{counter}.
+Процедура создаётся с помощью немедленного вызова \mintinline{scheme}{(lambda (n) ...)} с начальным значением \mintinline{scheme}{n = 0}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl, align=left] (f1-1) {
+      \mintinline{scheme}{(define counter } \\
+        \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
+    }
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 2. Завершение определения — создание замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Вычисление \mintinline{scheme}{(define counter ...)} завершено.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl, align=left] (f1-1) {
+      \mintinline{scheme}{(define counter } \\
+        \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
+    }
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 3. Глобальная среда после определения}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Определение \mintinline{scheme}{counter} полностью вычислено и записано в глобальную среду.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl, align=left] (f1-1) {
+      \mintinline{scheme}{(define counter } \\
+        \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
+    }
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, blue!70!black] (f1-1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 4. Замыкание полностью сформировано и «привязано» к своей среде}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Переменная \mintinline{scheme}{counter} в глобальной среде (верхний фрейм) теперь указывает на объект-процедуру \mintinline{scheme}{((lambda (n) ...) 0)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[box, below=of repl, align=left] (f1-1) {
+      \mintinline{scheme}{(define counter } \\
+        \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
+        \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
+    }
+      edge [<-, thick, blue!70!black] (repl);
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, right=of f1-1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, blue!70!black] (f1-1)
+      edge [dashed, thick, red!70!black] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 5. Готовность к первому вызову}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Выражение определения \mintinline{scheme}{(define counter ...)} полностью отработало и исчезло из вида.
+В стеке вызовов ничего нет — мы снова на верхнем уровне REPL.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of stack1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, red!70!black] (stack1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 6. Вызов счётчика в первый раз}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Среда \alert{REPL} выполняет выражение \mintinline{scheme}{(counter)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of stack1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, red!70!black] (stack1);
+    \node[box, below=of repl] (c1) { \mintinline{scheme}{ (counter) } }
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 7. Вход в тело замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Интерпретатор начинает вычислять тело внешней лямбды \mintinline{scheme}{(lambda (n) (lambda () (set! n (+ n 1)) n)} с параметром \mintinline{scheme}{n}, уже связанным с ячейкой, содержащей \mintinline{scheme}{0}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=of stack1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, red!70!black] (stack1);
+    \node[box, below=of repl] (c1) { 
+      \mintinline{scheme}{ ((lambda (n) } \\
+        \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+        \phantom{\ \ (}\mintinline{scheme}{0) }
+    }
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [dashed, thick, blue!70!black] (stack2)
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 8. Создание внутренней лямбды}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Интерпретатор дошёл до тела внешней лямбды и теперь вычисляет её единственное выражение — внутреннюю анонимную процедуру \mintinline{scheme}{(lambda () (set! n (+ n 1)) n)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, red!70!black] (stack1);
+    \node[box, below=of repl] (c1) { 
+      \mintinline{scheme}{ ((lambda (n) } \\
+        \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+        \phantom{\ \ (}\mintinline{scheme}{0) }
+    }
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [dashed, thick, blue!70!black] (stack2)
+      edge [<-, thick, blue!70!black] (repl);
+    \node[box, below=of c1] (c2) { 
+      \mintinline{scheme}{ (lambda () } \\
+        \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+    }
+      edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+      edge [<-, thick, blue!70!black] (c1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 9. Внутренняя лямбда-замыкание вызвана в первый раз.}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Интерпретатор вошёл в её тело и начал вычислять первую форму — \mintinline{scheme}{(set! n (+ n 1))}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, red!70!black] (stack1);
+    \node[box, below=of repl] (c1) { 
+      \mintinline{scheme}{ ((lambda (n) } \\
+        \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+        \phantom{\ \ (}\mintinline{scheme}{0) }
+    }
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [dashed, thick, blue!70!black] (stack2)
+      edge [<-, thick, blue!70!black] (repl);
+    \node[box, below=of c1] (c2) { 
+      \mintinline{scheme}{ (lambda () } \\
+        \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+    }
+      edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+      edge [<-, thick, blue!70!black] (c1);
+    \node[box, right=of c2, yshift=-0.5cm] (c3) { 
+      \mintinline{scheme}{ (set! n (+ n 1)) } }
+      edge [dashed, thick, blue!70!black] (stack2)
+      edge [<-, thick, blue!70!black] (c2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 10. Изменение захваченной переменной}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Выражение \mintinline{scheme}{(set! n (+ n 1))} уже вычислено и превратилось в \mintinline{scheme}{(set! n 1)}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
+      edge [dashed, thick, red!70!black] (stack1);
+    \node[box, below=of repl] (c1) { 
+      \mintinline{scheme}{ ((lambda (n) } \\
+        \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+        \phantom{\ \ (}\mintinline{scheme}{0) }
+    }
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [dashed, thick, blue!70!black] (stack2)
+      edge [<-, thick, blue!70!black] (repl);
+    \node[box, below=of c1] (c2) { 
+      \mintinline{scheme}{ (lambda () } \\
+        \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+    }
+      edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+      edge [<-, thick, blue!70!black] (c1);
+    \node[box, right=of c2, yshift=-0.5cm] (c3) { 
+      \mintinline{scheme}{ (set! n 1) } }
+      edge [dashed, thick, blue!70!black] (stack2)
+      edge [<-, thick, blue!70!black] (c2);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 11. Возврат значения из замыкания}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Присваивание \mintinline{scheme}{(set! n (+ n 1))} завершено — в захваченной ячейке теперь лежит \mintinline{scheme}{1}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=1cm of stack1] (stack2) {n $\mid$ 1}
+      edge [dashed, thick, red!70!black] (stack1);
+    \node[box, below=of repl] (c1) { 
+      \mintinline{scheme}{ ((lambda (n) } \\
+        \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
+        \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
+        \phantom{\ \ (}\mintinline{scheme}{0) }
+    }
+      edge [dashed, thick, blue!70!black] (stack1)
+      edge [dashed, thick, blue!70!black] (stack2)
+      edge [<-, thick, blue!70!black] (repl);
+    \node[box, below=of c1] (c2) { 
+      \mintinline{scheme}{ n }
+    }
+      edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+      edge [<-, thick, blue!70!black] (c1);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+
+   \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 12. Завершение первого вызова}
+\begin{columns}[c]
+
+  % ======== левая колонка: код ========
+  \column{0.4\textwidth}
+  \centering
+  \usebox{\codeboxCounter}
+  \vspace{0.4cm}
+
+  Вызов \mintinline{scheme}{(counter)} полностью завершён и вернул значение \mintinline{scheme}{1}.
+
+  \vfill
+
+  % ======= правая колонка: схема ======
+  \column{0.6\textwidth}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      box/.style={
+        draw=blue!70!black, fill=blue!5,
+        rounded corners, thick, align=center,
+        minimum width=2cm, minimum height=0.9cm,
+        font=\footnotesize
+      }
+    ]
+   \node[box] (repl) {\alert{REPL}};
+    \node[evaltree=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
+      edge [dashed, thick, blue!70!black] (repl);
+    \node[evaltree=1, below=1cm of stack1] (stack2) {n $\mid$ 1}
+      edge [dashed, thick, red!70!black] (stack1);
+    \node[box, below=of repl] (c1) { 1 } 
+      edge [<-, thick, blue!70!black] (repl);
+    \end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+\end{document}
