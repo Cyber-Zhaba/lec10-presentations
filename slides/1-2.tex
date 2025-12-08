@@ -5,6 +5,7 @@
     в \mintinline{scheme}{f2} использует аккумулятор
     \mintinline{scheme}{acc} для накопления результата,
     позволяя оптимизатору перезаписывать стек.
+
     На практике это превращает рекурсию в итерацию.
 
     \usebox{\codeFactorialTailRec}
@@ -139,8 +140,7 @@
         \vspace{0.4cm}
 
         Предикат вернул \mintinline{scheme}{(= n 0)}
-        вернул \mintinline{scheme}{#f}, поэтому
-        \mintinline{scheme}{if} выбирает
+        вернул \mintinline{scheme}{#f}
 
         \vfill
 
@@ -182,10 +182,7 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        \mintinline{scheme}{if} свертывается до
-        \mintinline{scheme}{(f2 (- n 1) (* n acc))} — это
-        чистый хвостовой вызов, готовый к оптимизации
-        без сохранения состояния.
+        \mintinline{scheme}{if} выбирает else-ветку
 
         \vfill
 
@@ -223,7 +220,7 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Форма if полностью свелась к телу рекурсивного
+        Форма \mintinline{scheme}{if} полностью свелась к телу рекурсивного
         вызова — выражению \mintinline{scheme}{(f2 (- n 1) (* n acc))}.
 
         \vfill
@@ -307,8 +304,6 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Оба аргумента рекурсивного вызова уже сведены к своим значениям
-
         \vfill
 
         % ======= правая колонка: схема ======
@@ -342,7 +337,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 9. Готовность к хвостовой оптимизации}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 9. Рекурсивный хвостовой вызов}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -380,6 +375,7 @@
     \end{columns}
 \end{frame}
 
+
 \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 10. Новый фрейм не создаётся}
     \begin{columns}[c]
 
@@ -389,9 +385,10 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        После оптимизации фрейм обновлен (
-        \mintinline{scheme}{n=2}, \mintinline{scheme}{acc=3}),
-        и цикл повторяется в том же фрейме — это итерация, а не рекурсия
+        После оптимизации вместо создания нового фрейма,
+        интерпретатор перезаписывает текущий фрейм.
+
+        Фактически это сводит рекурсию к итерации.
 
         \vfill
 
@@ -466,8 +463,7 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        После очередной итерации внутри того же
-        единственного фрейма стека значения снова обновились
+        Следующий рекурсивный вызов снова сводится к итерации
 
         \vfill
 
@@ -507,7 +503,7 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Очередная хвостовая оптимизация выполнена
+        Стек по-прежнему перезаписывается в ходе итераций
 
         \vfill
 
@@ -589,7 +585,9 @@
         \vspace{0.4cm}
 
         После последней хвостовой оптимизации в единственном
-        фрейме стека теперь \mintinline{scheme}{n = 0},
+        фрейме стека теперь
+
+        \mintinline{scheme}{n = 0},
         \mintinline{scheme}{acc = 6}.
 
         \vfill
@@ -622,48 +620,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 16. Подготовка к возврату результата}
-    \begin{columns}[c]
-
-        % ======== левая колонка: код ========
-        \column{0.4\textwidth}
-        \centering
-        \usebox{\codeFactorialTailRec}
-        \vspace{0.4cm}
-
-        В единственном фрейме стека теперь \mintinline{scheme}{n = 0}.
-
-        \vfill
-
-        % ======= правая колонка: схема ======
-        \column{0.6\textwidth}
-        \centering
-        \begin{tikzpicture}[
-            node distance=0.5cm,
-            box/.style={
-                draw=blue!70!black, fill=blue!5,
-                rounded corners, thick, align=center,
-                minimum width=3.8cm, minimum height=0.9cm,
-                font=\footnotesize
-            }
-        ]
-            \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-                edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-                edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-                edge [<-, thick, blue!70!black] (mul-1);
-            \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
-                edge [<-, thick, blue!70!black] (mul-2)
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
-        \end{tikzpicture}
-    \end{columns}
-\end{frame}
-
-
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 17. Возврат аккумулятора}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 16. Возврат аккумулятора}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -706,7 +663,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 18. Подъём результата}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 17. Подъём результата}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -716,7 +673,9 @@
         \vspace{0.4cm}
 
         \mintinline{scheme}{6} поднимается через перезаписанные
-        уровни (\mintinline{scheme}{n} $\to 1 \to 2 \to 3$),
+        уровни
+
+        (\mintinline{scheme}{n} $\to 1 \to 2 \to 3$),
         но без реального стека
 
         \vfill
@@ -750,6 +709,43 @@
 \end{frame}
 
 
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 18. Подъём результата}
+    \begin{columns}[c]
+
+        % ======== левая колонка: код ========
+        \column{0.4\textwidth}
+        \centering
+        \usebox{\codeFactorialTailRec}
+        \vspace{0.4cm}
+
+        \vfill
+
+        % ======= правая колонка: схема ======
+        \column{0.6\textwidth}
+        \centering
+        \begin{tikzpicture}[
+            node distance=0.5cm,
+            box/.style={
+                draw=blue!70!black, fill=blue!5,
+                rounded corners, thick, align=center,
+                minimum width=3.8cm, minimum height=0.9cm,
+                font=\footnotesize
+            }
+        ]
+            \node[box] (repl) {\alert{REPL}};
+            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+                edge [<-, thick, blue!70!black] (repl);
+            \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
+            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+                edge [<-, thick, blue!70!black] (f1-1);
+            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ 6 }}
+                edge [<-, thick, blue!70!black] (mul-1)
+                edge [->, thick, blue!70!black, bend left=30] (mul-1);
+        \end{tikzpicture}
+    \end{columns}
+\end{frame}
+
+
 \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 19. Подъём результата}
     \begin{columns}[c]
 
@@ -759,8 +755,6 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        За...
-
         \vfill
 
         % ======= правая колонка: схема ======
@@ -777,58 +771,17 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ 6 }}
-            edge [<-, thick, blue!70!black] (mul-1)
-            edge [->, thick, blue!70!black, bend left=30] (mul-1);
-        \end{tikzpicture}
-
-    \end{columns}
-\end{frame}
-
-
-
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 20. Финальный результат в REPL — рекурсия завершена без роста стека}
-    \begin{columns}[c]
-
-        % ======== левая колонка: код ========
-        \column{0.4\textwidth}
-        \centering
-        \usebox{\codeFactorialTailRec}
-        \vspace{0.4cm}
-
-        Значение 6 поднялось по всем «виртуальным» уровням.
-
-        \vfill
-
-        % ======= правая колонка: схема ======
-        \column{0.6\textwidth}
-        \centering
-        \begin{tikzpicture}[
-            node distance=0.5cm,
-            box/.style={
-                draw=blue!70!black, fill=blue!5,
-                rounded corners, thick, align=center,
-                minimum width=3.8cm, minimum height=0.9cm,
-                font=\footnotesize
-            }
-        ]
-            \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ 6 }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [->, thick, blue!70!black, bend left=30] (f1-1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [->, thick, blue!70!black, bend left=30] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 21. Всё завершено — результат в REPL}
+
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 20. Всё завершено — результат в REPL}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -855,8 +808,7 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ 6 }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
