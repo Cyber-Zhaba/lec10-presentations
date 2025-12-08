@@ -1,11 +1,17 @@
-\begin{frame}{1.2 Хвостовая рекурсия}
+\begin{frame}{1.2 Введение в хвостовую рекурсию}
     \centering
-    Продолжим анализ процедуры \mintinline{scheme}{f2}. Посмотрим как Scheme превращает красивую рекурсию в настоящую итерацию под капотом
+
+    В отличие от обычной рекурсии (1.1), хвостовая рекурсия
+    в \mintinline{scheme}{f2} использует аккумулятор
+    \mintinline{scheme}{acc} для накопления результата,
+    позволяя оптимизатору перезаписывать стек.
+    На практике это превращает рекурсию в итерацию.
 
     \usebox{\codeFactorialTailRec}
 \end{frame}
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 1. Начальный вызов хвостовой рекурсии}
+
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 1. Начальный вызов}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -14,7 +20,9 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Среда \alert{REPL} вызывает процедуру \mintinline{scheme}{f2} с аргументами \mintinline{scheme}{n = 3} и аккумулятором \mintinline{scheme}{acc = 1}
+        Среда \alert{REPL} запускает \mintinline{scheme}{f2} с
+        аргументами \mintinline{scheme}{n = 3} и
+        аккумулятором \mintinline{scheme}{acc = 1}
 
         \vfill
 
@@ -32,14 +40,13 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f2-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 2. Проверка условия завершения}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 2. Проверка базового случая}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -48,7 +55,10 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Внутри процедуры \mintinline{scheme}{f2} интерпретатор начинает вычислять форму \mintinline{scheme}{(if (= n 0))}.
+        После начального вызова интерпретатор переходит к
+        \mintinline{scheme}{if (= n 0)}, используя текущий фрейм
+        с \mintinline{scheme}{n=3} и \mintinline{scheme}{acc=1}
+        для проверки условия завершения.
 
         \vfill
 
@@ -66,19 +76,18 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 3. Вычисление предиката условия}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 3. Вычисление предиката}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -87,7 +96,8 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Интерпретатор переходит к вычислению предиката ветки \mintinline{scheme}{if} — выражения \mintinline{scheme}{(= n 0)}.
+        Внутри \mintinline{scheme}{if} вычисляется предикат
+        \mintinline{scheme}{(= n 0)}.
 
         \vfill
 
@@ -105,22 +115,21 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (eq1) {\mintinline{scheme}{ (= n 0) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 4. Условие ложно $\to$  выбирается ветка «иначе»}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 4. Переход к рекурсивной ветке}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -129,7 +138,9 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Вычисление предиката \mintinline{scheme}{(= n 0)} завершилось значением \mintinline{scheme}{#f}.
+        Предикат вернул \mintinline{scheme}{(= n 0)}
+        вернул \mintinline{scheme}{#f}, поэтому
+        \mintinline{scheme}{if} выбирает
 
         \vfill
 
@@ -147,23 +158,22 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (eq1) {\mintinline{scheme}{ #f }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1)
-            edge [->, thick, blue!70!black, bend left=30] (mul-1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1)
+                edge [->, thick, blue!70!black, bend left=30] (mul-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 5. Подготовка к хвостовому рекурсивному вызову}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 5. Сведение к хвостовому вызову}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -172,7 +182,10 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Форма \mintinline{scheme}{if} уже получила значение предиката \mintinline{scheme}{#f} и «свернулась» до альтернативной ветки.
+        \mintinline{scheme}{if} свертывается до
+        \mintinline{scheme}{(f2 (- n 1) (* n acc))} — это
+        чистый хвостовой вызов, готовый к оптимизации
+        без сохранения состояния.
 
         \vfill
 
@@ -190,19 +203,18 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if #f) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 6. Хвостовой рекурсивный вызов готов к выполнению}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 6. Подготовка аргументов}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -211,7 +223,8 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Форма if полностью свелась к телу рекурсивного вызова — выражению \mintinline{scheme}{(f2 (- n 1) (* n acc))}.
+        Форма if полностью свелась к телу рекурсивного
+        вызова — выражению \mintinline{scheme}{(f2 (- n 1) (* n acc))}.
 
         \vfill
 
@@ -229,14 +242,13 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -250,7 +262,8 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Интерпретатор начал вычислять аргументы рекурсивного вызова \mintinline{scheme}{(f2 (- n 1) (* n acc))}.
+        Интерпретатор начал вычислять аргументы рекурсивного вызова
+        \mintinline{scheme}{(f2 (- n 1) (* n acc))}.
 
         \vfill
 
@@ -268,23 +281,22 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=1.2cm of mul-1, xshift=-2cm] (sub-1) {\mintinline{scheme}{ (- n 1) }}
-            edge [dashed, thick, blue!70!black, bend right=22] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [dashed, thick, blue!70!black, bend right=22] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
             \node[box, below=1.2cm of mul-1, right=of sub-1] (mul-2) {\mintinline{scheme}{ (* n acc) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
-
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
+
 
 \begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 8. Аргументы хвостового вызова полностью вычислены}
     \begin{columns}[c]
@@ -313,26 +325,24 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=1.2cm of mul-1, xshift=-2cm] (sub-1) {\mintinline{scheme}{ (2) }}
-            edge [dashed, thick, blue!70!black, bend right=22] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [dashed, thick, blue!70!black, bend right=22] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
             \node[box, below=1.2cm of mul-1, right=of sub-1] (mul-2) {\mintinline{scheme}{ (3) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
-
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 9. Момент хвостовой оптимизации (TCO)}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 9. Готовность к хвостовой оптимизации}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -341,7 +351,8 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Интерпретатор полностью подготовил хвостовой рекурсивный вызов \mintinline{scheme}{(f2 2 3)}.
+        Интерпретатор полностью подготовил хвостовой
+        рекурсивный вызов \mintinline{scheme}{(f2 2 3)}.
 
         \vfill
 
@@ -359,19 +370,17 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
-
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 10. Хвостовая оптимизация выполнена — кадр перезаписан}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 10. Новый фрейм не создаётся}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -380,7 +389,9 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Сейчас произойдёт ключевое событие: вместо того чтобы положить на стек новый кадр процедуры \mintinline{scheme}{f2}, оптимизатор хвостовой рекурсии просто перезапишет текущий кадр значениями \mintinline{scheme}{n = 2} и \mintinline{scheme}{acc = 3} и передаст управление в начало тела процедуры \mintinline{scheme}{f2}.
+        После оптимизации фрейм обновлен (
+        \mintinline{scheme}{n=2}, \mintinline{scheme}{acc=3}),
+        и цикл повторяется в том же фрейме — это итерация, а не рекурсия
 
         \vfill
 
@@ -398,18 +409,17 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
-
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 11. Переход к следующей итерации — стек остаётся плоским}
+
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 11. Итерация: обновление фрейма}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -418,7 +428,8 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Хвостовая оптимизация успешно выполнена: текущий кадр стека перезаписан новыми значениями \mintinline{scheme}{n = 2} и \mintinline{scheme}{acc = 3} (\mintinline{scheme}{acc} уже умножен: \mintinline{scheme}{1} $\times$ \mintinline{scheme}{3 = 3}).
+        Перменные во фрейме перезаписываются новыми значениями
+        \mintinline{scheme}{n = 2} и \mintinline{scheme}{acc = 2}
 
         \vfill
 
@@ -436,14 +447,12 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 2 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
-
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -457,7 +466,8 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        После очередной итерации внутри того же единственного кадра стека значения снова обновились
+        После очередной итерации внутри того же
+        единственного фрейма стека значения снова обновились
 
         \vfill
 
@@ -475,22 +485,20 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 2 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 13. Последний рекурсивный шаг}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 13. Третья итерация}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -517,15 +525,14 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 1 \nodepart{two} acc $\mid$ 6 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -557,23 +564,22 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 1 \nodepart{two} acc $\mid$ 6 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1)
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
             \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1)
-            edge [<-, thick, blue!70!black] (mul-2);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+                edge [<-, thick, blue!70!black] (mul-2);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 15. Условие завершено — рекурсия заканчивается}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 15. Итерация заканчивается}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -582,7 +588,9 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        После последней хвостовой оптимизации в единственном кадре стека теперь \mintinline{scheme}{n = 0}, \mintinline{scheme}{acc = 6}.
+        После последней хвостовой оптимизации в единственном
+        фрейме стека теперь \mintinline{scheme}{n = 0},
+        \mintinline{scheme}{acc = 6}.
 
         \vfill
 
@@ -600,22 +608,21 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [<-, thick, blue!70!black] (mul-1);
             \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1)
-            edge [<-, thick, blue!70!black] (mul-2);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+                edge [<-, thick, blue!70!black] (mul-2);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 16. Завершение вычисления — возврат результата}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 16. Подготовка к возврату результата}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -624,7 +631,7 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        В единственном кадре стека теперь \mintinline{scheme}{n = 0}.
+        В единственном фрейме стека теперь \mintinline{scheme}{n = 0}.
 
         \vfill
 
@@ -642,22 +649,21 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [<-, thick, blue!70!black] (mul-1);
             \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
-            edge [<-, thick, blue!70!black] (mul-2)
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+                edge [<-, thick, blue!70!black] (mul-2)
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 17. Рекурсия завершена — возврат аккумулятора}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 17. Возврат аккумулятора}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -666,7 +672,9 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Условие \mintinline{scheme}{(= n 0)} истинно, поэтому тело процедуры свелось к простому возврату значения переменной \mintinline{scheme}{acc}.
+        Условие \mintinline{scheme}{(= n 0)} истинно,
+        поэтому тело процедуры свелось к простому
+        возврату значения переменной \mintinline{scheme}{acc}.
 
         \vfill
 
@@ -684,22 +692,21 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [<-, thick, blue!70!black] (mul-1);
             \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (acc) }}
-            edge [<-, thick, blue!70!black] (mul-2)
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+                edge [<-, thick, blue!70!black] (mul-2)
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 18. Результат возвращён — рекурсия полностью завершена}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 18. Подъём результата}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -708,7 +715,9 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Переменная acc в последнем кадре содержит значение \mintinline{scheme}{6}
+        \mintinline{scheme}{6} поднимается через перезаписанные
+        уровни (\mintinline{scheme}{n} $\to 1 \to 2 \to 3$),
+        но без реального стека
 
         \vfill
 
@@ -726,23 +735,22 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
-            edge [<-, thick, blue!70!black] (f1-1);
+                edge [<-, thick, blue!70!black] (f1-1);
             \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-            edge [<-, thick, blue!70!black] (mul-1);
+                edge [<-, thick, blue!70!black] (mul-1);
             \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ 6 }}
-            edge [<-, thick, blue!70!black] (mul-2)
-            edge [->, thick, blue!70!black, bend left=30] (mul-2)
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+                edge [<-, thick, blue!70!black] (mul-2)
+                edge [->, thick, blue!70!black, bend left=30] (mul-2)
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 19. Возврат значения вверх по цепочке (хвостовой позиции)}
+\begin{frame}[fragile]{1.2 Хвостовая рекурсия: Шаг 19. Подъём результата}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -751,7 +759,7 @@
         \usebox{\codeFactorialTailRec}
         \vspace{0.4cm}
 
-        Значение 6, полученное в последнем кадре, возвращается сразу в предыдущий «виртуальный» уровень.
+        За...
 
         \vfill
 
