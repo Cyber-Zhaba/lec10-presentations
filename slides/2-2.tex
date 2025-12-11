@@ -1,11 +1,15 @@
-\begin{frame}{2.2 Замыкание лямбды}
+\begin{frame}{2.2 Замыкание для хранения состояния}
     \centering
-    Разберём по шагам, как обычная лямбда-функция «захватывает» переменные из места своего рождения, сохраняет их в куче и продолжает к ним обращаться даже после завершения всех вызовов \mintinline{scheme}{f}.
+
+    Разберём по шагам, как обычная лямбда-функция «захватывает»
+    переменные из места своего рождения, сохраняет их в куче и
+    продолжает к ним обращаться даже после завершения всех вызовов
 
     \usebox{\codeClosureCounter}
 \end{frame}
 
-\begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 1. Определение счётчика через замыкание}
+
+\begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 1. Определение \alert{counter}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -15,7 +19,8 @@
         \vspace{0.4cm}
 
         В \alert{REPL} вводится определение переменной \mintinline{scheme}{counter}.
-        Процедура создаётся с помощью немедленного вызова \mintinline{scheme}{(lambda (n) ...)} с начальным значением \mintinline{scheme}{n = 0}.
+        Процедура создаётся с помощью немедленного вызова
+        \mintinline{scheme}{(lambda (n) ...)} с начальным значением \mintinline{scheme}{n = 0}.
 
         \vfill
 
@@ -40,14 +45,13 @@
                 \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
             }
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 2. Завершение определения — создание замыкания}
+\begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 2. Завершение внешней лямбды}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -81,11 +85,10 @@
                 \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
             }
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -99,7 +102,8 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Определение \mintinline{scheme}{counter} полностью вычислено и записано в глобальную среду.
+        Определение \mintinline{scheme}{counter} полностью вычислено и
+        записано в глобальную среду.
 
         \vfill
 
@@ -124,13 +128,12 @@
                 \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
             }
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, right=of f1-1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -142,9 +145,11 @@
         \column{0.4\textwidth}
         \centering
         \usebox{\codeClosureCounter}
-        \vspace{0.4cm}
+        \vspace{0.2cm}
 
-        Переменная \mintinline{scheme}{counter} в глобальной среде (верхний фрейм) теперь указывает на объект-процедуру \mintinline{scheme}{((lambda (n) ...) 0)}.
+        Замыкание полностью сформировано: \mintinline{scheme}{counter} ссылается на
+        внутреннюю лямбду, которая «помнит» \mintinline{scheme}{n=0} — глобальная
+        среда обновлена без изменений.
 
         \vfill
 
@@ -169,14 +174,13 @@
                 \phantom{\ \ \ \ \ \ (}\phantom{(}\mintinline{scheme}{n } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{0)) }
             }
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, right=of f1-1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, red!70!black] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -190,7 +194,8 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Выражение определения \mintinline{scheme}{(define counter ...)} полностью отработало и исчезло из вида.
+        Выражение определения \mintinline{scheme}{(define counter ...)}
+        полностью отработало и исчезло из вида.
         В стеке вызовов ничего нет — мы снова на верхнем уровне REPL.
 
         \vfill
@@ -209,11 +214,10 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=of stack1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -245,17 +249,15 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=of stack1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
             \node[box, below=of repl] (c1) { \mintinline{scheme}{ (counter) } }
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [<-, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
-
 
 
 \begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 7. Вход в тело замыкания}
@@ -267,7 +269,8 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Интерпретатор начинает вычислять тело внешней лямбды \mintinline{scheme}{(lambda (n) (lambda () (set! n (+ n 1)) n)} с параметром \mintinline{scheme}{n}, уже связанным с ячейкой, содержащей \mintinline{scheme}{0}.
+        Вызов перенаправлен во внешнюю лямбду с \mintinline{scheme}{n=0}; тело
+        начинает вычисляться — добавлен фрейм, ссылающийся на захваченную \mintinline{scheme}{n}.
 
         \vfill
 
@@ -285,9 +288,9 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=of stack1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
             \node[box, below=of repl] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
@@ -295,11 +298,10 @@
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
                 \phantom{\ \ (}\mintinline{scheme}{0) }
             }
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [dashed, thick, blue!70!black] (stack2)
-            edge [<-, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [dashed, thick, blue!70!black] (stack2)
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -313,7 +315,8 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Интерпретатор дошёл до тела внешней лямбды и теперь вычисляет её единственное выражение — внутреннюю анонимную процедуру \mintinline{scheme}{(lambda () (set! n (+ n 1)) n)}.
+        Интерпретатор дошёл до тела внешней лямбды и теперь вычисляет её
+        единственное выражение — внутреннюю лямбду
 
         \vfill
 
@@ -331,9 +334,9 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
             \node[box, below=of repl] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
@@ -341,23 +344,22 @@
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
                 \phantom{\ \ (}\mintinline{scheme}{0) }
             }
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [dashed, thick, blue!70!black] (stack2)
-            edge [<-, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [dashed, thick, blue!70!black] (stack2)
+                edge [<-, thick, blue!70!black] (repl);
             \node[box, below=of c1] (c2) {
                 \mintinline{scheme}{ (lambda () } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
             }
-            edge [dashed, thick, blue!70!black, bend right=40] (stack2)
-            edge [<-, thick, blue!70!black] (c1);
+                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [<-, thick, blue!70!black] (c1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 9. Внутренняя лямбда-замыкание вызвана в первый раз.}
+\begin{frame}[fragile]{2.2 Замыкание лямбды: Шаг 9. Вызов внутренней лямбды}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -366,7 +368,9 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Интерпретатор вошёл в её тело и начал вычислять первую форму — \mintinline{scheme}{(set! n (+ n 1))}.
+        Внутренняя лямбда вызвана: интерпретатор входит в её тело и начинает
+        \mintinline{scheme}{set!} — фрейм ссылается на
+        \mintinline{scheme}{n=0}, подготавливая инкремент
 
         \vfill
 
@@ -384,9 +388,9 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
             \node[box, below=of repl] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
@@ -394,22 +398,21 @@
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
                 \phantom{\ \ (}\mintinline{scheme}{0) }
             }
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [dashed, thick, blue!70!black] (stack2)
-            edge [<-, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [dashed, thick, blue!70!black] (stack2)
+                edge [<-, thick, blue!70!black] (repl);
             \node[box, below=of c1] (c2) {
                 \mintinline{scheme}{ (lambda () } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
             }
-            edge [dashed, thick, blue!70!black, bend right=40] (stack2)
-            edge [<-, thick, blue!70!black] (c1);
+                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [<-, thick, blue!70!black] (c1);
             \node[box, right=of c2, yshift=-0.5cm] (c3) {
                 \mintinline{scheme}{ (set! n (+ n 1)) } }
-            edge [dashed, thick, blue!70!black] (stack2)
-            edge [<-, thick, blue!70!black] (c2);
+                edge [dashed, thick, blue!70!black] (stack2)
+                edge [<-, thick, blue!70!black] (c2);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -423,7 +426,8 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Выражение \mintinline{scheme}{(set! n (+ n 1))} уже вычислено и превратилось в \mintinline{scheme}{(set! n 1)}.
+        Выражение \mintinline{scheme}{(set! n (+ n 1))} уже вычислено и
+        превратилось в \mintinline{scheme}{(set! n 1)}.
 
         \vfill
 
@@ -441,9 +445,9 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
             \node[box, below=of repl] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
@@ -451,22 +455,21 @@
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
                 \phantom{\ \ (}\mintinline{scheme}{0) }
             }
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [dashed, thick, blue!70!black] (stack2)
-            edge [<-, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [dashed, thick, blue!70!black] (stack2)
+                edge [<-, thick, blue!70!black] (repl);
             \node[box, below=of c1] (c2) {
                 \mintinline{scheme}{ (lambda () } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
             }
-            edge [dashed, thick, blue!70!black, bend right=40] (stack2)
-            edge [<-, thick, blue!70!black] (c1);
+                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [<-, thick, blue!70!black] (c1);
             \node[box, right=of c2, yshift=-0.5cm] (c3) {
                 \mintinline{scheme}{ (set! n 1) } }
-            edge [dashed, thick, blue!70!black] (stack2)
-            edge [<-, thick, blue!70!black] (c2);
+                edge [dashed, thick, blue!70!black] (stack2)
+                edge [<-, thick, blue!70!black] (c2);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -480,7 +483,8 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Присваивание \mintinline{scheme}{(set! n (+ n 1))} завершено — в захваченной ячейке теперь лежит \mintinline{scheme}{1}.
+        Присваивание \mintinline{scheme}{(set! n (+ n 1))} завершено — в
+        захваченной ячейке теперь лежит \mintinline{scheme}{n=1}.
 
         \vfill
 
@@ -498,9 +502,9 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 1}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
             \node[box, below=of repl] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
@@ -508,16 +512,15 @@
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
                 \phantom{\ \ (}\mintinline{scheme}{0) }
             }
-            edge [dashed, thick, blue!70!black] (stack1)
-            edge [dashed, thick, blue!70!black] (stack2)
-            edge [<-, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (stack1)
+                edge [dashed, thick, blue!70!black] (stack2)
+                edge [<-, thick, blue!70!black] (repl);
             \node[box, below=of c1] (c2) {
                 \mintinline{scheme}{ n }
             }
-            edge [dashed, thick, blue!70!black, bend right=40] (stack2)
-            edge [<-, thick, blue!70!black] (c1);
+                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [<-, thick, blue!70!black] (c1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
@@ -531,7 +534,8 @@
         \usebox{\codeClosureCounter}
         \vspace{0.4cm}
 
-        Вызов \mintinline{scheme}{(counter)} полностью завершён и вернул значение \mintinline{scheme}{1}.
+        Вызов \mintinline{scheme}{(counter)} полностью
+        завершён и вернул значение \mintinline{scheme}{1}.
 
         \vfill
 
@@ -549,12 +553,11 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
-            edge [dashed, thick, blue!70!black] (repl);
+                edge [dashed, thick, blue!70!black] (repl);
             \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 1}
-            edge [dashed, thick, red!70!black] (stack1);
+                edge [dashed, thick, red!70!black] (stack1);
             \node[box, below=of repl] (c1) { 1 }
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
