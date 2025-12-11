@@ -4,13 +4,13 @@
     На примере функций \mintinline{scheme}{f} и \mintinline{scheme}{g}
     разберем, как лямбда-выражение захватывает внешнюю переменную
     \mintinline{scheme}{x} и сохраняет доступ к ней в замыкании — механизм,
-    позволяющий функциям «помнить» окружение.
+    позволяющий процедурам «помнить» окружение.
 
     \usebox{\codeLambdaExample}
 \end{frame}
 
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 1. Начальный вызов процедуры f}
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 1. Вызов \alert{f}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -19,7 +19,10 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Среда \alert{REPL} вызывает пользовательскую процедуру \mintinline{scheme}{f} с аргументом \mintinline{scheme}{4}.
+        Среда \alert{REPL} вызывает \mintinline{scheme}{f} с аргументом
+        \mintinline{scheme}{x=4}, создавая первый фрейм стека — это запустит цепочку,
+        где лямбда внутри \mintinline{scheme}{f} захватит \mintinline{scheme}{x} для
+        последующих вызовов.
 
         \vfill
 
@@ -37,14 +40,13 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 2. Начало вычисления тела процедуры f}
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 2. Тело \alert{f}: подготовка вызова \alert{g}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -53,7 +55,8 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Интерпретатор приступил к вычислению тела процедуры \mintinline{scheme}{f}: формы \mintinline{scheme}{(+ (g ...) 3)}.
+        После привязки \mintinline{scheme}{x=4} интерпретатор переходит к телу
+        \mintinline{scheme}{f}
 
         \vfill
 
@@ -71,18 +74,18 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 3. Вычисление фактического аргумента для вызова g}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 3. Создание замыкания}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -91,7 +94,7 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Интерпретатор завершил создание замыкания \mintinline{scheme}{(lambda (y) (* x y))} в окружающей среде, где \mintinline{scheme}{x} = 4.
+        Интерпретатор перерходит к вызову процедуры \mintinline{scheme}{g}
 
         \vfill
 
@@ -109,21 +112,20 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=of p1] (g1) {\mintinline{scheme}{  (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black] (p1);
+                edge [<-, thick, blue!70!black] (p1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 4. Вызов процедуры g — рост стека}
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 4. Вызов \alert{g}: новый фрейм}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -132,7 +134,9 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Интерпретатор выполнил применение процедуры \mintinline{scheme}{g} к замыканию \mintinline{scheme}{(lambda (y) (* x y))}.
+        Замыкание передано в \mintinline{scheme}{g} как \mintinline{scheme}{h};
+        создан второй фрейм стека с \mintinline{scheme}{h} — стек растет, но замыкание
+        сохраняет ссылку на \mintinline{scheme}{x=4} из первого фрейма
 
         \vfill
 
@@ -150,24 +154,23 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.3cm of p1, xshift=-0.5cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=25] (p1);
+                edge [<-, thick, blue!70!black, bend left=25] (p1);
             \node[env-node=1, right=of g1, above=0.7cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 5. Начало вычисления тела процедуры g}
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 5. Тело \alert{g}: двойной вызов \alert{h}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -176,7 +179,10 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Интерпретатор приступил к вычислению тела процедуры \mintinline{scheme}{g}
+        Интерпретатор входит в тело \mintinline{scheme}{g}:
+        \mintinline{scheme}{(h (h 7))} — фрейм \mintinline{scheme}{g} обновлен,
+        готовясь к первому вызову \mintinline{scheme}{h} (замыкания),
+        которое использует захваченное \mintinline{scheme}{x}.
 
         \vfill
 
@@ -194,26 +200,26 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=35] (p1);
+                edge [<-, thick, blue!70!black, bend left=35] (p1);
             \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
             \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-            edge [<-, thick, blue!70!black] (g1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+                edge [<-, thick, blue!70!black] (g1);
         \end{tikzpicture}
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 6. Первый (внешний) вызов замыкания h — рост стека продолжается}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 6. Первый вызов \mintinline{scheme}{h}: аргумент 7}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -222,7 +228,9 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Интерпретатор вычислил аргумент внутреннего вызова — число \mintinline{scheme}{7} — и теперь готов применить процедуру \mintinline{scheme}{h} к этому аргументу.
+        Аргумент \mintinline{scheme}{7} вычислен; интерпретатор готовит применение
+        \mintinline{scheme}{h} к \mintinline{scheme}{7} — это создаст третий фрейм
+        для лямбды, с доступом к \mintinline{scheme}{x=4} через цепочку окружений.
 
         \vfill
 
@@ -240,29 +248,29 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=35] (p1);
+                edge [<-, thick, blue!70!black, bend left=35] (p1);
             \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
             \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-            edge [<-, thick, blue!70!black] (g1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+                edge [<-, thick, blue!70!black] (g1);
             \node[box, below=of h1] (h2) {\mintinline{scheme}{ (h 7) }}
-            edge [dashed, thick, blue!70!black, bend right=35] (stack2)
-            edge [<-, thick, blue!70!black] (h1);
+                edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+                edge [<-, thick, blue!70!black] (h1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 7. Первое применение замыкания}
+
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 7. Применение лямбды: фрейм \alert{y=7}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -271,7 +279,9 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Интерпретатор выполнил первый вызов замыкания \mintinline{scheme}{h} к аргументом \mintinline{scheme}{7}.
+        \mintinline{scheme}{h} (замыкание) применено к \mintinline{scheme}{7}: создан
+        фрейм с \mintinline{scheme}{y=7}, который ссылается на \mintinline{scheme}{x=4}
+        из внешнего окружения \mintinline{scheme}{f} — стек вырос до трех уровней.
 
         \vfill
 
@@ -289,33 +299,31 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=35] (p1);
+                edge [<-, thick, blue!70!black, bend left=35] (p1);
             \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
             \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-            edge [<-, thick, blue!70!black] (g1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+                edge [<-, thick, blue!70!black] (g1);
             \node[box, below=of h1] (h2) {\mintinline{scheme}{ ((lambda (y) (* x y)) 7) }}
-            edge [dashed, thick, blue!70!black, bend right=35] (stack2)
-            edge [dashed, thick, red!70!black, bend right=40] (stack1)
-            edge [<-, thick, blue!70!black] (h1);
+                edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+                edge [<-, thick, blue!70!black] (h1);
             \node[env-node=1, below=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
-            edge [dashed, thick, blue!70!black] (h2);
+                edge [dashed, thick, blue!70!black] (h2);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 8. Завершение первого применения замыкания}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 8. Вычисление в лямбде: \alert{(* x y)}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -324,7 +332,8 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Тело лямбда-выражения \mintinline{scheme}{(* x y)} полностью вычислено
+        В лямбде вычисляется \mintinline{scheme}{(* x y) = (* 4 7) = 28} — доступ к
+        \mintinline{scheme}{x=4}; результат готов к возврату, без изменений в других фреймах.
 
         \vfill
 
@@ -342,34 +351,32 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=35] (p1);
+                edge [<-, thick, blue!70!black, bend left=35] (p1);
             \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
             \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-            edge [<-, thick, blue!70!black] (g1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+                edge [<-, thick, blue!70!black] (g1);
             \node[box, below=of h1] (h2) {\mintinline{scheme}{ 28 }}
-            edge [dashed, thick, blue!70!black, bend right=35] (stack2)
-            edge [dashed, thick, red!70!black, bend right=40] (stack1)
-            edge [->, thick, blue!70!black, bend left=30] (h1)
-            edge [<-, thick, blue!70!black] (h1);
+                edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+                edge [->, thick, blue!70!black, bend left=30] (h1)
+                edge [<-, thick, blue!70!black] (h1);
             \node[env-node=1, below=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
-            edge [dashed, thick, blue!70!black] (h2);
+                edge [dashed, thick, blue!70!black] (h2);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 9. Возврат из первого замыкания}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 9. Возврат из первого \alert{h}: фрейм удален}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -378,7 +385,9 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Первый вызов замыкания \mintinline{scheme}{(lambda (y) (* x y))} завершён и полностью вытеснен из стека (фрейм с \mintinline{scheme}{y | 7} удалён).
+        Лямбда вернула \mintinline{scheme}{28}; фрейм \mintinline{scheme}{y=7}
+        удален из стека — результат подставлен во второй вызов
+        \mintinline{scheme}{(h 28)}, стек сократился до двух уровней.
 
         \vfill
 
@@ -396,27 +405,26 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=35] (p1);
+                edge [<-, thick, blue!70!black, bend left=35] (p1);
             \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
             \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h 28) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-            edge [<-, thick, blue!70!black] (g1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+                edge [<-, thick, blue!70!black] (g1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 10. Второй вызов того же замыкания}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 10. Второй вызов \alert{h}: аргумент 28}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -425,7 +433,10 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Интерпретатор выполнил второй вызов замыкания \mintinline{scheme}{h} уже с аргументом \mintinline{scheme}{28}.
+        Теперь \mintinline{scheme}{h} применяется к \mintinline{scheme}{28}:
+        создан новый фрейм с \mintinline{scheme}{y=28}, снова ссылающийся на
+        \mintinline{scheme}{x=4} — замыкание демонстрирует сохранение
+        окружения во втором вызове.
 
         \vfill
 
@@ -443,30 +454,28 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=35] (p1);
+                edge [<-, thick, blue!70!black, bend left=35] (p1);
             \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
             \node[box, below=of g1] (h1) {\mintinline{scheme}{ ((lambda (y) (* x y)) 28) }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-            edge [dashed, thick, red!70!black, bend right=40] (stack1)
-            edge [<-, thick, blue!70!black] (g1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+                edge [<-, thick, blue!70!black] (g1);
             \node[env-node=1, below=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
-            edge [dashed, thick, blue!70!black] (h1);
+                edge [dashed, thick, blue!70!black] (h1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 11. Завершение второго применения замыкания}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 11. Вычисление второго \alert{(* x y)}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -475,8 +484,8 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Тело лямбда-выражения \mintinline{scheme}{(* x y)} вычислено во второй раз:
-        при \mintinline{scheme}{x} = 4 и \mintinline{scheme}{y} = 28 получено значение \mintinline{scheme}{112}.
+        В лямбде \mintinline{scheme}{(* x y) = (* 4 28) = 112} — \mintinline{scheme}{x=4}
+        по-прежнему доступно; результат возвращен, фрейм \mintinline{scheme}{y=28} готов к удалению.
 
         \vfill
 
@@ -494,31 +503,30 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-            edge [<-, thick, blue!70!black, bend left=35] (p1);
+                edge [<-, thick, blue!70!black, bend left=35] (p1);
             \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=45] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
             \node[box, below=of g1] (h1) {\mintinline{scheme}{ 112 }}
-            edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-            edge [dashed, thick, red!70!black, bend right=40] (stack1)
-            edge [->, thick, blue!70!black, bend left=30] (g1)
-            edge [<-, thick, blue!70!black] (g1);
+                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+                edge [dashed, thick, red!70!black, bend right=40] (stack1)
+                edge [->, thick, blue!70!black, bend left=30] (g1)
+                edge [<-, thick, blue!70!black] (g1);
             \node[env-node=1, below=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
-            edge [dashed, thick, blue!70!black] (h1);
+                edge [dashed, thick, blue!70!black] (h1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 12. Завершение вызова g — возврат значения 112 в тело процедуры f}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 12. Завершение \alert{g}: возврат 112}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -527,7 +535,9 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Процедура \mintinline{scheme}{g} полностью отработала и вернула значение \mintinline{scheme}{112}.
+        \mintinline{scheme}{g} завершена, вернув \mintinline{scheme}{112}; фрейм
+        \mintinline{scheme}{g} удален, результат передан в тело \mintinline{scheme}{f} —
+        стек сократился до одного уровня, замыкание \mintinline{scheme}{h} больше не нужно.
 
         \vfill
 
@@ -545,26 +555,24 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
             \node[box, below=1.3cm of p1, xshift=-1cm] (g1) {112}
-            edge [->, thick, blue!70!black, bend left=30] (p1)
-            edge [<-, thick, blue!70!black] (p1);
+                edge [->, thick, blue!70!black, bend left=30] (p1)
+                edge [<-, thick, blue!70!black] (p1);
             \node[env-node=1, right=of g1, above=0.7cm, xshift=1.8cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-            edge [dashed, thick, blue!70!black, bend left=20] (g1)
-            edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=20] (g1)
+                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 13. инальное вычисление в теле процедуры}
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 13. Финальное +3 в \alert{f}}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -573,7 +581,9 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Вызов \mintinline{scheme}{g} полностью завершён, его результат \mintinline{scheme}{112} подставлен в тело процедуры \mintinline{scheme}{f}.
+        112 подставлено в \mintinline{scheme}{(+ ... 3) = (+ 112 3)} —
+        интерпретатор вычисляет финальное выражение в единственном фрейме
+        \mintinline{scheme}{f}.
 
         \vfill
 
@@ -591,19 +601,18 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ 112 3) }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 14. Окончередной результат — возврат в REPL}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 14. Результат \alert{f}: 115}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -612,7 +621,7 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Примитивная операция \mintinline{scheme}{(+ 112 3)} вычислена, получено окончательное значение \mintinline{scheme}{115}.
+        \mintinline{scheme}{(+ 112 3) = 115}
 
         \vfill
 
@@ -630,20 +639,19 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
             \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
-            edge [dashed, thick, blue!70!black] (f1-1);
+                edge [dashed, thick, blue!70!black] (f1-1);
             \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ 115 }}
-            edge [<-, thick, blue!70!black] (f1-1)
-            edge [->, thick, blue!70!black, bend left=30] (f1-1)
-            edge [dashed, thick, blue!70!black] (stack1);
+                edge [<-, thick, blue!70!black] (f1-1)
+                edge [->, thick, blue!70!black, bend left=30] (f1-1)
+                edge [dashed, thick, blue!70!black] (stack1);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 15. Конец вычисления}
+
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 15. Завершение вычисления}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -652,7 +660,9 @@
         \usebox{\codeLambdaExample}
         \vspace{0.4cm}
 
-        Процедура \mintinline{scheme}{f} полностью отработала и вернула значение \mintinline{scheme}{115} прямо в \alert{REPL}.
+        \mintinline{scheme}{115} доставлено в \alert{REPL}; стек полностью
+        очищен — замыкание обеспечило доступ к \mintinline{scheme}{x=4} на
+        всех уровнях, без потери контекста.
 
         \vfill
 
@@ -670,9 +680,7 @@
         ]
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ 115 }}
-            edge [<-, thick, blue!70!black] (repl);
+                edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
-
-
     \end{columns}
 \end{frame}
