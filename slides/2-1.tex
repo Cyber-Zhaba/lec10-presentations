@@ -219,7 +219,7 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 6. Первый вызов \mintinline{scheme}{h}: аргумент 7}
+\begin{frame}[fragile]{2.1 Замыкание лямбды: Шаг 6. Первый вызов \alert{h}: аргумент 7}
     \begin{columns}[c]
 
         % ======== левая колонка: код ========
@@ -281,7 +281,7 @@
 
         \mintinline{scheme}{h} (замыкание) применено к \mintinline{scheme}{7}: создан
         фрейм с \mintinline{scheme}{y=7}, который ссылается на \mintinline{scheme}{x=4}
-        из внешнего окружения \mintinline{scheme}{f} — стек вырос до трех уровней.
+        из внешнего окружения \mintinline{scheme}{f}
 
         \vfill
 
@@ -435,8 +435,7 @@
 
         Теперь \mintinline{scheme}{h} применяется к \mintinline{scheme}{28}:
         создан новый фрейм с \mintinline{scheme}{y=28}, снова ссылающийся на
-        \mintinline{scheme}{x=4} — замыкание демонстрирует сохранение
-        окружения во втором вызове.
+        \mintinline{scheme}{x=4}
 
         \vfill
 
