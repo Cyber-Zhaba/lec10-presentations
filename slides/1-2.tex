@@ -426,7 +426,7 @@
         \vspace{0.4cm}
 
         Перменные во фрейме перезаписываются новыми значениями
-        \mintinline{scheme}{n = 2} и \mintinline{scheme}{acc = 2}
+        \mintinline{scheme}{n = 2} и \mintinline{scheme}{acc = 3}
 
         \vfill
 
@@ -445,7 +445,7 @@
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 2 };
+            \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 3 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
@@ -482,7 +482,7 @@
             \node[box] (repl) {\alert{REPL}};
             \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 2 };
+            \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 3 };
             \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
