@@ -37,7 +37,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl, align=left] (f1-1) {
+            \node[box, above=of repl, align=left] (f1-1) {
                 \mintinline{scheme}{(define counter } \\
                 \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
@@ -77,7 +77,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl, align=left] (f1-1) {
+            \node[box, above=of repl, align=left] (f1-1) {
                 \mintinline{scheme}{(define counter } \\
                 \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
@@ -120,7 +120,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl, align=left] (f1-1) {
+            \node[box, above=of repl, align=left] (f1-1) {
                 \mintinline{scheme}{(define counter } \\
                 \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
@@ -166,7 +166,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl, align=left] (f1-1) {
+            \node[box, above=of repl, align=left] (f1-1) {
                 \mintinline{scheme}{(define counter } \\
                 \phantom{\ \ (}\mintinline{scheme}{((lambda (n) } \\
                 \phantom{\ \ \ \ (}\mintinline{scheme}{(lambda () } \\
@@ -215,7 +215,7 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of stack1] (stack2) {n $\mid$ 0}
+            \node[env-node=1, above=of stack1] (stack2) {n $\mid$ 0}
                 edge [dashed, thick, red!70!black] (stack1);
         \end{tikzpicture}
     \end{columns}
@@ -250,9 +250,9 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of stack1] (stack2) {n $\mid$ 0}
+            \node[env-node=1, above=of stack1] (stack2) {n $\mid$ 0}
                 edge [dashed, thick, red!70!black] (stack1);
-            \node[box, below=of repl] (c1) { \mintinline{scheme}{ (counter) } }
+            \node[box, above=of repl] (c1) { \mintinline{scheme}{ (counter) } }
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
@@ -289,9 +289,9 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of stack1] (stack2) {n $\mid$ 0}
+            \node[env-node=1, above=of stack1] (stack2) {n $\mid$ 0}
                 edge [dashed, thick, red!70!black] (stack1);
-            \node[box, below=of repl] (c1) {
+            \node[box, above=of repl, align=left] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
@@ -335,9 +335,9 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
+            \node[env-node=1, above=1cm of stack1] (stack2) {n $\mid$ 0}
                 edge [dashed, thick, red!70!black] (stack1);
-            \node[box, below=of repl] (c1) {
+            \node[box, above=of repl, align=left] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
@@ -347,12 +347,12 @@
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [dashed, thick, blue!70!black] (stack2)
                 edge [<-, thick, blue!70!black] (repl);
-            \node[box, below=of c1] (c2) {
+            \node[box, above=of c1, align=left] (c2) {
                 \mintinline{scheme}{ (lambda () } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
             }
-                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [dashed, thick, blue!70!black, bend left=40] (stack2)
                 edge [<-, thick, blue!70!black] (c1);
         \end{tikzpicture}
     \end{columns}
@@ -389,9 +389,9 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
+            \node[env-node=1, above=1cm of stack1] (stack2) {n $\mid$ 0}
                 edge [dashed, thick, red!70!black] (stack1);
-            \node[box, below=of repl] (c1) {
+            \node[box, above=of repl, align=left] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
@@ -401,14 +401,14 @@
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [dashed, thick, blue!70!black] (stack2)
                 edge [<-, thick, blue!70!black] (repl);
-            \node[box, below=of c1] (c2) {
+            \node[box, above=of c1, align=left] (c2) {
                 \mintinline{scheme}{ (lambda () } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
             }
-                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [dashed, thick, blue!70!black, bend left=40] (stack2)
                 edge [<-, thick, blue!70!black] (c1);
-            \node[box, right=of c2, yshift=-0.5cm] (c3) {
+            \node[box, right=of c2, yshift=0.5cm] (c3) {
                 \mintinline{scheme}{ (set! n (+ n 1)) } }
                 edge [dashed, thick, blue!70!black] (stack2)
                 edge [<-, thick, blue!70!black] (c2);
@@ -446,9 +446,9 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 0}
+            \node[env-node=1, above=1cm of stack1] (stack2) {n $\mid$ 0}
                 edge [dashed, thick, red!70!black] (stack1);
-            \node[box, below=of repl] (c1) {
+            \node[box, above=of repl, align=left] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
@@ -458,14 +458,14 @@
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [dashed, thick, blue!70!black] (stack2)
                 edge [<-, thick, blue!70!black] (repl);
-            \node[box, below=of c1] (c2) {
+            \node[box, above=of c1, align=left] (c2) {
                 \mintinline{scheme}{ (lambda () } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
                 \phantom{\ \ (}\phantom{(}\mintinline{scheme}{n)) } \\
             }
-                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [dashed, thick, blue!70!black, bend left=40] (stack2)
                 edge [<-, thick, blue!70!black] (c1);
-            \node[box, right=of c2, yshift=-0.5cm] (c3) {
+            \node[box, right=of c2, yshift=0.5cm] (c3) {
                 \mintinline{scheme}{ (set! n 1) } }
                 edge [dashed, thick, blue!70!black] (stack2)
                 edge [<-, thick, blue!70!black] (c2);
@@ -503,9 +503,9 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 1}
+            \node[env-node=1, above=1cm of stack1] (stack2) {n $\mid$ 1}
                 edge [dashed, thick, red!70!black] (stack1);
-            \node[box, below=of repl] (c1) {
+            \node[box, above=of repl, align=left] (c1) {
                 \mintinline{scheme}{ ((lambda (n) } \\
                 \phantom{\ \ (}\mintinline{scheme}{(lambda () } \\
                 \phantom{\ \ \ \ (}\phantom{(}\mintinline{scheme}{(set! n (+ n 1)) } \\
@@ -515,10 +515,10 @@
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [dashed, thick, blue!70!black] (stack2)
                 edge [<-, thick, blue!70!black] (repl);
-            \node[box, below=of c1] (c2) {
+            \node[box, above=of c1] (c2) {
                 \mintinline{scheme}{ n }
             }
-                edge [dashed, thick, blue!70!black, bend right=40] (stack2)
+                edge [dashed, thick, blue!70!black, bend left=40] (stack2)
                 edge [<-, thick, blue!70!black] (c1);
         \end{tikzpicture}
     \end{columns}
@@ -554,9 +554,9 @@
             \node[box] (repl) {\alert{REPL}};
             \node[env-node=2, rectangle split, right=of repl] (stack1) { \mintinline{scheme}{counter} \nodepart{two} \mintinline{scheme}{((lambda (n) ...) 0)} }
                 edge [dashed, thick, blue!70!black] (repl);
-            \node[env-node=1, below=1cm of stack1] (stack2) {n $\mid$ 1}
+            \node[env-node=1, above=1cm of stack1] (stack2) {n $\mid$ 1}
                 edge [dashed, thick, red!70!black] (stack1);
-            \node[box, below=of repl] (c1) { 1 }
+            \node[box, above=of repl] (c1) { 1 }
                 edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
     \end{columns}
