@@ -39,7 +39,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
     \end{columns}
@@ -73,11 +73,11 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
         \end{tikzpicture}
@@ -111,14 +111,14 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=of p1] (g1) {\mintinline{scheme}{  (g (lambda (y) (* x y)) }}
+            \node[box, above=of p1] (g1) {\mintinline{scheme}{  (g (lambda (y) (* x y)) }}
                 edge [<-, thick, blue!70!black] (p1);
         \end{tikzpicture}
     \end{columns}
@@ -153,18 +153,18 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.3cm of p1, xshift=-0.5cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=25] (p1);
-            \node[env-node=1, right=of g1, above=0.7cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+            \node[box, above=1.3cm of p1, xshift=-0.5cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=25] (p1);
+            \node[env-node=1, right=of g1, below=0.7cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1);
         \end{tikzpicture}
     \end{columns}
 \end{frame}
@@ -199,20 +199,20 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=35] (p1);
-            \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
-            \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+            \node[box, above=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=35] (p1);
+            \node[env-node=1, right=of g1, below=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=45] (stack1);
+            \node[box, above=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack2)
                 edge [<-, thick, blue!70!black] (g1);
         \end{tikzpicture}
     \end{columns}
@@ -247,23 +247,23 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=35] (p1);
-            \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
-            \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+            \node[box, above=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=35] (p1);
+            \node[env-node=1, right=of g1, below=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=45] (stack1);
+            \node[box, above=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack2)
                 edge [<-, thick, blue!70!black] (g1);
-            \node[box, below=of h1] (h2) {\mintinline{scheme}{ (h 7) }}
-                edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+            \node[box, above=of h1] (h2) {\mintinline{scheme}{ (h 7) }}
+                edge [dashed, thick, blue!70!black, bend left=35] (stack2)
                 edge [<-, thick, blue!70!black] (h1);
         \end{tikzpicture}
     \end{columns}
@@ -298,25 +298,25 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=35] (p1);
-            \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
-            \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+            \node[box, above=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=35] (p1);
+            \node[env-node=1, right=of g1, below=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=45] (stack1);
+            \node[box, above=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack2)
                 edge [<-, thick, blue!70!black] (g1);
-            \node[box, below=of h1] (h2) {\mintinline{scheme}{ ((lambda (y) (* x y)) 7) }}
-                edge [dashed, thick, blue!70!black, bend right=35] (stack2)
+            \node[box, above=of h1] (h2) {\mintinline{scheme}{ ((lambda (y) (* x y)) 7) }}
+                edge [dashed, thick, blue!70!black, bend left=35] (stack2)
                 edge [<-, thick, blue!70!black] (h1);
-            \node[env-node=1, below=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
+            \node[env-node=1, above=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
                 edge [dashed, thick, blue!70!black] (h2);
         \end{tikzpicture}
     \end{columns}
@@ -350,26 +350,26 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=35] (p1);
-            \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
-            \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+            \node[box, above=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=35] (p1);
+            \node[env-node=1, right=of g1, below=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=45] (stack1);
+            \node[box, above=of g1] (h1) {\mintinline{scheme}{ (h (h 7)) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack2)
                 edge [<-, thick, blue!70!black] (g1);
-            \node[box, below=of h1] (h2) {\mintinline{scheme}{ 28 }}
-                edge [dashed, thick, blue!70!black, bend right=35] (stack2)
-                edge [->, thick, blue!70!black, bend left=30] (h1)
+            \node[box, above=of h1] (h2) {\mintinline{scheme}{ 28 }}
+                edge [dashed, thick, blue!70!black, bend left=35] (stack2)
+                edge [->, thick, blue!70!black, bend right=30] (h1)
                 edge [<-, thick, blue!70!black] (h1);
-            \node[env-node=1, below=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
+            \node[env-node=1, above=of repl, right=1cm of h2] (stack3) { y $\mid$ 7 }
                 edge [dashed, thick, blue!70!black] (h2);
         \end{tikzpicture}
     \end{columns}
@@ -404,20 +404,20 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=35] (p1);
-            \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
-            \node[box, below=of g1] (h1) {\mintinline{scheme}{ (h 28) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+            \node[box, above=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=35] (p1);
+            \node[env-node=1, right=of g1, below=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=45] (stack1);
+            \node[box, above=of g1] (h1) {\mintinline{scheme}{ (h 28) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack2)
                 edge [<-, thick, blue!70!black] (g1);
         \end{tikzpicture}
     \end{columns}
@@ -452,22 +452,22 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=35] (p1);
-            \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
-            \node[box, below=of g1] (h1) {\mintinline{scheme}{ ((lambda (y) (* x y)) 28) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
+            \node[box, above=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=35] (p1);
+            \node[env-node=1, right=of g1, below=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=45] (stack1);
+            \node[box, above=of g1] (h1) {\mintinline{scheme}{ ((lambda (y) (* x y)) 28) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack2)
                 edge [<-, thick, blue!70!black] (g1);
-            \node[env-node=1, below=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
+            \node[env-node=1, above=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
                 edge [dashed, thick, blue!70!black] (h1);
         \end{tikzpicture}
     \end{columns}
@@ -501,23 +501,23 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
-                edge [<-, thick, blue!70!black, bend left=35] (p1);
-            \node[env-node=1, right=of g1, above=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=45] (stack1);
-            \node[box, below=of g1] (h1) {\mintinline{scheme}{ 112 }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack2)
-                edge [->, thick, blue!70!black, bend left=30] (g1)
+            \node[box, above=1.4cm of p1, xshift=-0.7cm] (g1) {\mintinline{scheme}{ (g (lambda (y) (* x y)) }}
+                edge [<-, thick, blue!70!black, bend right=35] (p1);
+            \node[env-node=1, right=of g1, below=0.65cm, xshift=0.6cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=45] (stack1);
+            \node[box, above=of g1] (h1) {\mintinline{scheme}{ 112 }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack2)
+                edge [->, thick, blue!70!black, bend right=30] (g1)
                 edge [<-, thick, blue!70!black] (g1);
-            \node[env-node=1, below=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
+            \node[env-node=1, above=of g1, right=1cm of h1] (stack3) { y $\mid$ 28 }
                 edge [dashed, thick, blue!70!black] (h1);
         \end{tikzpicture}
     \end{columns}
@@ -552,19 +552,19 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=1cm of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ (g (lambda (y) (* x y)) 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
-            \node[box, below=1.3cm of p1, xshift=-1cm] (g1) {112}
-                edge [->, thick, blue!70!black, bend left=30] (p1)
+            \node[box, above=1.3cm of p1, xshift=-1cm] (g1) {112}
+                edge [->, thick, blue!70!black, bend right=30] (p1)
                 edge [<-, thick, blue!70!black] (p1);
-            \node[env-node=1, right=of g1, above=0.7cm, xshift=1.8cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
-                edge [dashed, thick, blue!70!black, bend left=20] (g1)
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+            \node[env-node=1, right=of g1, below=0.7cm, xshift=1.8cm] (stack2) { h $\mid$ \mintinline{scheme}{ (lambda (y) (* x y)) } }
+                edge [dashed, thick, blue!70!black, bend right=20] (g1)
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1);
         \end{tikzpicture}
     \end{columns}
 \end{frame}
@@ -598,11 +598,11 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ (+ 112 3) }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ (+ 112 3) }}
                 edge [<-, thick, blue!70!black] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
         \end{tikzpicture}
@@ -636,13 +636,13 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ (f 4) }}
                 edge [<-, thick, blue!70!black] (repl);
-            \node[env-node=1, below=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
+            \node[env-node=1, above=of repl, right=of f1-1] (stack1) { x $\mid$ 4 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (p1) {\mintinline{scheme}{ 115 }}
+            \node[box, above=of f1-1] (p1) {\mintinline{scheme}{ 115 }}
                 edge [<-, thick, blue!70!black] (f1-1)
-                edge [->, thick, blue!70!black, bend left=30] (f1-1)
+                edge [->, thick, blue!70!black, bend right=30] (f1-1)
                 edge [dashed, thick, blue!70!black] (stack1);
         \end{tikzpicture}
     \end{columns}
@@ -677,7 +677,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ 115 }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ 115 }}
                 edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
     \end{columns}
