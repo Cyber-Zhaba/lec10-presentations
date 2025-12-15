@@ -40,7 +40,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f2-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f2-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
     \end{columns}
@@ -76,11 +76,11 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
@@ -115,15 +115,15 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (eq1) {\mintinline{scheme}{ (= n 0) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+            \node[box, above=of mul-1] (eq1) {\mintinline{scheme}{ (= n 0) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1)
                 edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
     \end{columns}
@@ -157,17 +157,17 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (if (= n 0)) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (eq1) {\mintinline{scheme}{ #f }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+            \node[box, above=of mul-1] (eq1) {\mintinline{scheme}{ #f }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1)
                 edge [<-, thick, blue!70!black] (mul-1)
-                edge [->, thick, blue!70!black, bend left=30] (mul-1);
+                edge [->, thick, blue!70!black, bend right=30] (mul-1);
         \end{tikzpicture}
     \end{columns}
 \end{frame}
@@ -199,11 +199,11 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (if #f) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (if #f) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
@@ -238,11 +238,11 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
@@ -277,18 +277,18 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=1.2cm of mul-1, xshift=-2cm] (sub-1) {\mintinline{scheme}{ (- n 1) }}
-                edge [dashed, thick, blue!70!black, bend right=22] (stack1)
-                edge [<-, thick, blue!70!black] (mul-1);
-            \node[box, below=1.2cm of mul-1, right=of sub-1] (mul-2) {\mintinline{scheme}{ (* n acc) }}
+            \node[box, above=1.2cm of mul-1, xshift=3cm] (sub-1) {\mintinline{scheme}{ (- n 1) }}
                 edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
+            \node[box, above=1.2cm of mul-1, left=of sub-1] (mul-2) {\mintinline{scheme}{ (* n acc) }}
+                edge [dashed, thick, blue!70!black, bend left=22] (stack1)
                 edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
     \end{columns}
@@ -319,18 +319,18 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 (- n 1) (* n acc)) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=1.2cm of mul-1, xshift=-2cm] (sub-1) {\mintinline{scheme}{ (2) }}
-                edge [dashed, thick, blue!70!black, bend right=22] (stack1)
-                edge [<-, thick, blue!70!black] (mul-1);
-            \node[box, below=1.2cm of mul-1, right=of sub-1] (mul-2) {\mintinline{scheme}{ (3) }}
+            \node[box, above=1.2cm of mul-1, xshift=3cm] (sub-1) {\mintinline{scheme}{ 2 }}
                 edge [dashed, thick, blue!70!black] (stack1)
+                edge [<-, thick, blue!70!black] (mul-1);
+            \node[box, above=1.2cm of mul-1, left=of sub-1] (mul-2) {\mintinline{scheme}{ 3 }}
+                edge [dashed, thick, blue!70!black, bend left=22] (stack1)
                 edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
     \end{columns}
@@ -364,11 +364,11 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 }
                 edge [dashed, thick, blue!70!black] (f1-1);
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
@@ -405,10 +405,10 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 3 \nodepart{two} acc $\mid$ 1 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
@@ -443,10 +443,10 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 3 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
         \end{tikzpicture}
@@ -480,14 +480,14 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 2 \nodepart{two} acc $\mid$ 3 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [dashed, thick, blue!70!black] (stack1)
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+            \node[box, above=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1)
                 edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
     \end{columns}
@@ -520,13 +520,13 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 1 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+            \node[box, above=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1)
                 edge [<-, thick, blue!70!black] (mul-1);
         \end{tikzpicture}
     \end{columns}
@@ -559,16 +559,16 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 1 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+            \node[box, above=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1)
                 edge [<-, thick, blue!70!black] (mul-1);
-            \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+            \node[box, above=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1)
                 edge [<-, thick, blue!70!black] (mul-2);
         \end{tikzpicture}
     \end{columns}
@@ -605,15 +605,15 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+            \node[box, above=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
                 edge [<-, thick, blue!70!black] (mul-1);
-            \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1)
+            \node[box, above=of mul-2] (mul-3) {\mintinline{scheme}{ (f2 0 6) }}
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1)
                 edge [<-, thick, blue!70!black] (mul-2);
         \end{tikzpicture}
     \end{columns}
@@ -648,16 +648,16 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+            \node[box, above=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
                 edge [<-, thick, blue!70!black] (mul-1);
-            \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ (acc) }}
+            \node[box, above=of mul-2] (mul-3) {\mintinline{scheme}{ (acc) }}
                 edge [<-, thick, blue!70!black] (mul-2)
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1);
         \end{tikzpicture}
     \end{columns}
 \end{frame}
@@ -693,17 +693,17 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
+            \node[box, above=of mul-1] (mul-2) {\mintinline{scheme}{ (f2 1 6) }}
                 edge [<-, thick, blue!70!black] (mul-1);
-            \node[box, below=of mul-2] (mul-3) {\mintinline{scheme}{ 6 }}
+            \node[box, above=of mul-2] (mul-3) {\mintinline{scheme}{ 6 }}
                 edge [<-, thick, blue!70!black] (mul-2)
-                edge [->, thick, blue!70!black, bend left=30] (mul-2)
-                edge [dashed, thick, blue!70!black, bend right=30] (stack1);
+                edge [->, thick, blue!70!black, bend right=30] (mul-2)
+                edge [dashed, thick, blue!70!black, bend left=30] (stack1);
         \end{tikzpicture}
     \end{columns}
 \end{frame}
@@ -733,14 +733,14 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ (f2 2 3) }}
                 edge [<-, thick, blue!70!black] (f1-1);
-            \node[box, below=of mul-1] (mul-2) {\mintinline{scheme}{ 6 }}
+            \node[box, above=of mul-1] (mul-2) {\mintinline{scheme}{ 6 }}
                 edge [<-, thick, blue!70!black] (mul-1)
-                edge [->, thick, blue!70!black, bend left=30] (mul-1);
+                edge [->, thick, blue!70!black, bend right=30] (mul-1);
         \end{tikzpicture}
     \end{columns}
 \end{frame}
@@ -770,12 +770,12 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{(f2 3 1)}}
                 edge [<-, thick, blue!70!black] (repl);
             \node[env-node=2, right=1.5cm of f1-1] (stack1) { n $\mid$ 0 \nodepart{two} acc $\mid$ 6 };
-            \node[box, below=of f1-1] (mul-1) {\mintinline{scheme}{ 6 }}
+            \node[box, above=of f1-1] (mul-1) {\mintinline{scheme}{ 6 }}
                 edge [<-, thick, blue!70!black] (f1-1)
-                edge [->, thick, blue!70!black, bend left=30] (f1-1);
+                edge [->, thick, blue!70!black, bend right=30] (f1-1);
         \end{tikzpicture}
     \end{columns}
 \end{frame}
@@ -807,7 +807,7 @@
             }
         ]
             \node[box] (repl) {\alert{REPL}};
-            \node[box, below=of repl] (f1-1) {\mintinline{scheme}{ 6 }}
+            \node[box, above=of repl] (f1-1) {\mintinline{scheme}{ 6 }}
                 edge [<-, thick, blue!70!black] (repl);
         \end{tikzpicture}
     \end{columns}
